@@ -1,0 +1,6 @@
+#!/bin/sh
+flags="${XDG_CONFIG_HOME:-$HOME/.config}/equibop-flags.conf"
+if [ -f "$flags" ]; then
+	set -- $(grep -v '^[[:space:]]*#' "$flags") "$@"
+fi
+exec /usr/lib/equibop/equibop "$@"

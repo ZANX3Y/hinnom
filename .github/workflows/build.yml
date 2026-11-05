@@ -1,0 +1,97 @@
+name: Build repository
+
+on:
+  push:
+    branches: [master]
+    paths: ['srcpkgs/**', 'common/**', 'scripts/**', '.github/workflows/build.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  ARCH: x86_64
+  GH_REPO: ${{ github.repository }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/void-linux/void-glibc-full
+      options: --privileged
+      volumes:
+        - /dev:/dev
+
+    steps:
+      - name: Prepare container
+        run: |
+          mkdir -p /etc/xbps.d && cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/
+          sed -i 's|repo-default|repo-ci|g' /etc/xbps.d/*-repository-*.conf
+          xbps-install -Syu xbps && xbps-install -yu
+          xbps-install -y sudo bash curl git github-cli
+          useradd -G xbuilder -M builder
+
+      - uses: actions/checkout@v5
+
+      - name: Prepare void-packages
+        run: |
+          git clone --depth 1 https://github.com/void-linux/void-packages.git void-packages
+          chown -R builder:builder .
+          cd void-packages
+          printf '%s\n' XBPS_CHROOT_CMD=uchroot XBPS_ALLOW_RESTRICTED=yes XBPS_PRESERVE_PKGS=yes >> etc/conf
+          sudo -Eu builder ./xbps-src binary-bootstrap
+
+      - name: Fetch published packages
+        run: |
+          mkdir -p void-packages/hostdir/binpkgs
+          cd void-packages/hostdir/binpkgs
+          if gh release view "$ARCH" >/dev/null 2>&1; then
+            gh release download "$ARCH" -p '*.xbps' -p '*.sig2'
+          fi
+          "$GITHUB_WORKSPACE/scripts/prune-packages"
+          set -- *.xbps
+          [ ! -e "$1" ] || xbps-rindex -a "$@"
+          chown -R builder:builder .
+
+      - name: Build packages
+        run: sudo -Eu builder env XBPS_SRC_FLAGS="-j$(nproc)" scripts/build
+
+      - name: Index and sign
+        env:
+          XBPS_SIGNING_KEY: ${{ secrets.XBPS_SIGNING_KEY }}
+        run: |
+          [ -n "$XBPS_SIGNING_KEY" ] || { echo "::error::XBPS_SIGNING_KEY is not set"; exit 1; }
+          scripts/prune-packages
+          cd void-packages/hostdir/binpkgs
+          xbps-rindex -a *.xbps
+          xbps-rindex -c "$PWD"
+          xbps-rindex -r "$PWD"
+          for s in *.sig2; do [ -e "${s%.sig2}" ] || rm -f "$s"; done
+          printf '%s\n' "$XBPS_SIGNING_KEY" > /tmp/privkey.pem
+          xbps-rindex --sign --signedby "zanxey <z@zanxey.com>" --privkey /tmp/privkey.pem "$PWD"
+          for p in *.xbps; do
+            [ -e "$p.sig2" ] || xbps-rindex --sign-pkg --privkey /tmp/privkey.pem "$p"
+          done
+          rm -f /tmp/privkey.pem
+
+      - name: Publish
+        run: |
+          cd void-packages/hostdir/binpkgs
+          gh release view "$ARCH" >/dev/null 2>&1 ||
+            gh release create "$ARCH" --title "Repository ($ARCH)" \
+              --notes "xbps repository. Add \`repository=https://hinnom.znx.pw/$ARCH\` to /etc/xbps.d/."
+          assets=$(gh release view "$ARCH" --json assets --jq '.assets[].name')
+          new=
+          for f in *.xbps *.sig2; do
+            printf '%s\n' "$assets" | grep -qxF "$f" || new="$new $f"
+          done
+          [ -z "$new" ] || gh release upload "$ARCH" $new
+          gh release upload "$ARCH" --clobber "$ARCH-repodata"
+          printf '%s\n' "$assets" | while read -r a; do
+            [ -z "$a" ] || [ -e "$a" ] || gh release delete-asset "$ARCH" "$a" -y
+          done

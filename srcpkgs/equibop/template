@@ -1,0 +1,46 @@
+# Template file for 'equibop'
+pkgname=equibop
+version=3.3.2
+revision=1
+archs="x86_64 aarch64"
+create_wrksrc=yes
+# libsecret is dlopen()ed for safeStorage; venmic (screen share audio) links
+# PipeWire and PulseAudio from inside app.asar, where shlib detection can't see.
+depends="libnotify libpipewire libpulseaudio libsecret xdg-utils"
+short_desc="Discord client with Equicord and improved Linux support"
+maintainer="zanxey <z@zanxey.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/Equicord/Equibop"
+changelog="https://github.com/Equicord/Equibop/releases"
+case "$XBPS_TARGET_MACHINE" in
+	x86_64)
+		_debarch=amd64
+		checksum=3520d5d1fa647e8423f9e6f76a991367508abe1fadb9f37994a5fdb2d6d75625
+		;;
+	aarch64)
+		_debarch=arm64
+		checksum=5c4dec4af2285980e86632f9478f54dee0f73cb2e918ff7a04c92f49c8491e40
+		;;
+esac
+distfiles="https://github.com/Equicord/Equibop/releases/download/v${version}/equibop_${version}_${_debarch}.deb"
+nostrip=yes
+noshlibprovides=yes
+
+do_install() {
+	# Without package-type electron-updater falls back to its AppImage
+	# updater, which stays inactive outside an AppImage.
+	rm opt/Equibop/resources/package-type opt/Equibop/resources/app-update.yml \
+		opt/Equibop/resources/apparmor-profile
+
+	vmkdir usr/lib
+	vcopy opt/Equibop usr/lib
+	mv ${DESTDIR}/usr/lib/Equibop ${DESTDIR}/usr/lib/equibop
+	vbin ${FILESDIR}/equibop
+
+	vinstall usr/share/applications/equibop.desktop 644 usr/share/applications
+	vsed -i ${DESTDIR}/usr/share/applications/equibop.desktop \
+		-e 's|^Exec=.*|Exec=equibop %U|' \
+		-e 's|^Categories=.*|Categories=Network;InstantMessaging;Chat;|'
+	vinstall usr/share/icons/hicolor/scalable/apps/equibop.svg 644 \
+		usr/share/icons/hicolor/scalable/apps
+}

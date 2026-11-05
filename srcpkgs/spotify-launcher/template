@@ -1,0 +1,32 @@
+# Template file for 'spotify-launcher'
+pkgname=spotify-launcher
+version=0.6.6
+revision=1
+archs="x86_64"
+build_style=cargo
+hostmakedepends="pkg-config"
+makedepends="liblzma-devel"
+# sqv verifies the apt repository signature, zenity shows progress;
+# the rest is what the downloaded Spotify client links against.
+depends="sequoia-sqv zenity alsa-lib gtk+3 libatomic libayatana-appindicator
+ libgbm nss"
+short_desc="Client for Spotify's apt repository"
+maintainer="zanxey <z@zanxey.com>"
+license="MIT, Apache-2.0"
+homepage="https://github.com/kpcyrd/spotify-launcher"
+changelog="https://github.com/kpcyrd/spotify-launcher/releases"
+distfiles="https://github.com/kpcyrd/spotify-launcher/archive/refs/tags/v${version}.tar.gz"
+checksum=aa24c78bfe851699c5d19a98f6a8b7dfe94d9d55c7572bb8577cc651b0f80f61
+conf_files="/etc/spotify-launcher.conf"
+
+post_install() {
+	vinstall data/pubkey_5384CE82BA52C83A.gpg 644 usr/share/spotify-launcher keyring.pgp
+	vinstall contrib/spotify-launcher.desktop 644 usr/share/applications
+	vconf contrib/spotify-launcher.conf
+	for size in 16 22 24 32 48 64 128 256 512; do
+		vinstall contrib/icons/spotify-linux-${size}.png 644 \
+			usr/share/icons/hicolor/${size}x${size}/apps spotify-launcher.png
+	done
+	vlicense LICENSE-MIT
+	vlicense LICENSE-APACHE
+}

@@ -1,0 +1,13 @@
+Installed headers include <lua.h> and <libeis.h>. On Void these live in
+/usr/include/lua5.5 and /usr/include/libei-1.0, so plugins built against
+`pkg-config hyprland` (e.g. via hyprpm) need them in Requires.
+
+--- a/hyprland.pc.in
++++ b/hyprland.pc.in
+@@ -4,5 +4,5 @@
+ URL: https://github.com/hyprwm/Hyprland
+ Description: Hyprland header files
+ Version: @HYPRLAND_VERSION@
+-Requires: aquamarine >= @AQUAMARINE_MINIMUM_VERSION@, hyprcursor >= @HYPRCURSOR_MINIMUM_VERSION@, hyprgraphics >= @HYPRGRAPHICS_MINIMUM_VERSION@, hyprlang >= @HYPRLANG_MINIMUM_VERSION@, hyprutils >= @HYPRUTILS_MINIMUM_VERSION@, libdrm, egl, cairo, xkbcommon >= @XKBCOMMON_MINIMUM_VERSION@, libinput >= @LIBINPUT_MINIMUM_VERSION@, wayland-server >= @WAYLAND_SERVER_MINIMUM_VERSION@@PKGCONFIG_XWAYLAND_DEPENDENCIES@
++Requires: aquamarine >= @AQUAMARINE_MINIMUM_VERSION@, hyprcursor >= @HYPRCURSOR_MINIMUM_VERSION@, hyprgraphics >= @HYPRGRAPHICS_MINIMUM_VERSION@, hyprlang >= @HYPRLANG_MINIMUM_VERSION@, hyprutils >= @HYPRUTILS_MINIMUM_VERSION@, libdrm, egl, cairo, xkbcommon >= @XKBCOMMON_MINIMUM_VERSION@, libinput >= @LIBINPUT_MINIMUM_VERSION@, wayland-server >= @WAYLAND_SERVER_MINIMUM_VERSION@, lua5.5, libeis-1.0@PKGCONFIG_XWAYLAND_DEPENDENCIES@
+ Cflags: -I${prefix} -I${prefix}/hyprland/protocols -I${prefix}/hyprland -I${prefix}/hyprland/src

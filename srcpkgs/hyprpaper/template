@@ -1,0 +1,21 @@
+# Template file for 'hyprpaper'
+pkgname=hyprpaper
+version=0.8.5
+revision=1
+build_style=cmake
+hostmakedepends="pkg-config hyprwayland-scanner hyprwire"
+makedepends="file-devel hyprlang-devel hyprtoolkit-devel hyprutils-devel
+ hyprwire-devel libdrm-devel libglvnd-devel pixman-devel wayland-devel
+ wayland-protocols"
+short_desc="Wallpaper utility for Hyprland with IPC controls"
+maintainer="zanxey <z@zanxey.com>"
+license="BSD-3-Clause"
+homepage="https://github.com/hyprwm/hyprpaper"
+changelog="https://github.com/hyprwm/hyprpaper/releases"
+distfiles="https://github.com/hyprwm/hyprpaper/archive/refs/tags/v${version}.tar.gz"
+checksum=d5868931dc485fd2e798717ce885bc62abd1e00796ff921f31e1903147bff3bf
+
+post_install() {
+	rm -r ${DESTDIR}/usr/lib/systemd
+	vlicense LICENSE
+}

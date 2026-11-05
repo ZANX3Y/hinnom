@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+outdated=0
+failed=0
+
+api() {
+	if command -v gh >/dev/null 2>&1 && out=$(gh api "$1" --jq "$2" 2>/dev/null); then
+		printf '%s\n' "$out"
+		return
+	fi
+	out=$(curl -fsSL "https://api.github.com/$1" 2>/dev/null) || return 1
+	printf '%s\n' "$out" |
+		sed -n "s/^ *\"$3\": *\"\([^\"]*\)\".*/\1/p" | head -n1
+}
+
+for tmpl in "$ROOT"/srcpkgs/*/template; do
+	pkg=$(basename "$(dirname "$tmpl")")
+	repo=$(sed -n 's|^distfiles="https://github.com/\([^/]*/[^/]*\)/.*|\1|p' "$tmpl")
+	if [ -z "$repo" ]; then
+		printf '%-30s %s\n' "$pkg" "skipped (not on GitHub)"
+		continue
+	fi
+	commit=$(sed -n 's/^_commit=//p' "$tmpl")
+	if [ -n "$commit" ]; then
+		cur=$(echo "$commit" | cut -c1-7)
+		new=$(api "repos/$repo/commits/HEAD" .sha sha) || new=
+		new=$(printf '%s\n' "$new" | cut -c1-7)
+	else
+		cur=$(sed -n 's/^version=//p' "$tmpl")
+		new=$(api "repos/$repo/releases/latest" .tag_name tag_name) || new=
+		if [ -z "$new" ]; then
+			new=$(api "repos/$repo/tags" '.[0].name' name) || new=
+		fi
+		new=${new#v}
+	fi
+	if [ -z "$new" ]; then
+		printf '%-30s %-12s %s\n' "$pkg" "$cur" "lookup failed"
+		failed=1
+	elif [ "$new" = "$cur" ]; then
+		printf '%-30s %-12s %s\n' "$pkg" "$cur" "up to date"
+	else
+		printf '%-30s %-12s -> %s\n' "$pkg" "$cur" "$new"
+		outdated=1
+	fi
+done
+[ "$failed" -eq 0 ] || exit 2
+exit $outdated

@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+VP=${VOID_PACKAGES:-$ROOT/void-packages}
+BINPKGS=${1:-$VP/hostdir/binpkgs}
+
+packages=$(
+	for dir in "$ROOT"/srcpkgs/*/; do
+		[ -f "$dir/template" ] || continue
+		basename "$dir"
+		sed -n 's/^\([A-Za-z0-9+._-]*\)_package()[[:space:]]*{.*/\1/p' "$dir/template"
+	done
+)
+
+for archive in "$BINPKGS"/*.xbps; do
+	[ -f "$archive" ] || continue
+	name=${archive##*/}
+	name=${name%-*}
+	if ! printf '%s\n' "$packages" | grep -qxF "$name"; then
+		echo "removing unmaintained package ${archive##*/}"
+		rm -f "$archive" "$archive.sig2"
+	fi
+done

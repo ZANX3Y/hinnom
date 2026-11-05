@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+VP=${VOID_PACKAGES:-$ROOT/void-packages}
+SYNCED=$VP/.hinnom-synced
+
+if [ ! -d "$VP/.git" ]; then
+	git clone --depth 1 https://github.com/void-linux/void-packages.git "$VP"
+	"$VP/xbps-src" binary-bootstrap
+fi
+
+if [ -f "$SYNCED" ]; then
+	while read -r p; do
+		rm -rf "$VP/srcpkgs/$p"
+		git -C "$VP" checkout -q -- "srcpkgs/$p" 2>/dev/null || true
+	done < "$SYNCED"
+fi
+git -C "$VP" checkout -q -- common/shlibs
+: > "$SYNCED"
+
+for dir in "$ROOT"/srcpkgs/*/; do
+	pkg=$(basename "$dir")
+	rm -rf "$VP/srcpkgs/$pkg"
+	cp -r "$dir" "$VP/srcpkgs/$pkg"
+	echo "$pkg" >> "$SYNCED"
+	sed -n 's/^\([A-Za-z0-9+._-]*\)_package()[[:space:]]*{.*/\1/p' "$dir/template" | while read -r sub; do
+		rm -rf "$VP/srcpkgs/$sub"
+		ln -s "$pkg" "$VP/srcpkgs/$sub"
+		echo "$sub" >> "$SYNCED"
+	done
+done
+
+entries=$(grep -v '^[[:space:]]*\(#\|$\)' "$ROOT/common/shlibs")
+printf '%s\n' "$entries" | while read -r soname _; do
+	sed -i "\\|^${soname%%.so.*}\\.so\\.[0-9]|d" "$VP/common/shlibs"
+done
+printf '%s\n' "$entries" >> "$VP/common/shlibs"
+
+echo "synced $(ls "$ROOT/srcpkgs" | wc -l) templates into $VP"

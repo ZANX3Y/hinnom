@@ -1,0 +1,51 @@
+# Template file for 'darkly'
+pkgname=darkly
+version=0.5.42
+revision=1
+build_style=cmake
+configure_args="-DBUILD_TESTING=OFF -DKDE_INSTALL_USE_QT_SYS_PATHS=ON"
+hostmakedepends="extra-cmake-modules gettext qt5-qmake qt5-host-tools
+ qt6-base qt6-tools kconfig-devel kcoreaddons-devel kcmutils-devel
+ kf6-kconfig kf6-kcmutils-devel"
+makedepends="qt5-declarative-devel kcoreaddons-devel kconfig-devel
+ kconfigwidgets-devel kguiaddons-devel ki18n-devel kiconthemes-devel
+ kwindowsystem-devel kcmutils-devel kirigami2-devel frameworkintegration-devel
+ qt6-base-devel qt6-declarative-devel kf6-kcoreaddons-devel
+ kf6-kcolorscheme-devel kf6-kconfig-devel kf6-kguiaddons-devel kf6-ki18n-devel
+ kf6-kiconthemes-devel kf6-kwindowsystem-devel kf6-kcmutils-devel
+ kf6-kirigami-devel kf6-frameworkintegration-devel kf6-kdecoration-devel"
+depends="kf6-frameworkintegration"
+short_desc="Modern style for Qt applications, fork of Lightly"
+maintainer="zanxey <z@zanxey.com>"
+license="GPL-2.0-or-later"
+homepage="https://github.com/Bali10050/Darkly"
+changelog="https://github.com/Bali10050/Darkly/releases"
+distfiles="https://github.com/Bali10050/Darkly/archive/refs/tags/v${version}.tar.gz"
+checksum=96bdc7bca88de2071345b118e51f530123983e7b38256a160cd233f925e83732
+
+post_install() {
+	rm -r ${DESTDIR}/usr/lib/cmake
+}
+
+darkly-qt5_package() {
+	short_desc+=" - Qt5 style"
+	depends="${sourcepkg}>=${version}_${revision} frameworkintegration"
+	pkg_install() {
+		vmove usr/lib/qt5
+	}
+}
+
+darkly-plasma_package() {
+	short_desc+=" - KWin decoration and Plasma theme"
+	depends="${sourcepkg}>=${version}_${revision}"
+	pkg_install() {
+		vmove usr/lib/qt6/plugins/org.kde.kdecoration3
+		vmove usr/lib/qt6/plugins/org.kde.kdecoration3.kcm
+		vmove usr/share/kservices6
+		vmove usr/share/applications/kcm_darklydecoration.desktop
+		vmove usr/share/plasma
+		for f in ${DESTDIR}/usr/share/locale/*/LC_MESSAGES/darkly_kwin_deco.mo; do
+			vmove ${f#${DESTDIR}/}
+		done
+	}
+}

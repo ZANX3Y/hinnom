@@ -1,0 +1,14 @@
+Public headers include hyprutils (-> pixman.h), libdrm (drm_fourcc.h lives in
+/usr/include/libdrm) and wayland-client, but aquamarine.pc declares no
+Requires, so consumers using only `pkg-config aquamarine` miss those include
+paths.
+
+--- a/aquamarine.pc.in
++++ b/aquamarine.pc.in
+@@ -6,5 +6,6 @@
+ URL: https://github.com/hyprwm/aquamarine
+ Description: A very light linux rendering backend library
+ Version: @AQUAMARINE_VERSION@
++Requires: hyprutils, libdrm, wayland-client
+ Cflags: -I${includedir}
+ Libs: -L${libdir} -laquamarine

@@ -1,0 +1,43 @@
+# Template file for 'helium-browser'
+pkgname=helium-browser
+version=0.21.1.1
+revision=2
+archs="x86_64 aarch64"
+create_wrksrc=yes
+# GTK (file dialogs, theming) and PulseAudio are dlopen()ed by Chromium.
+depends="gtk+3 libpulseaudio liberation-fonts-ttf xdg-utils"
+short_desc="Private, fast, and honest web browser"
+maintainer="zanxey <z@zanxey.com>"
+license="GPL-3.0-only, BSD-3-Clause"
+homepage="https://helium.computer"
+changelog="https://github.com/imputnet/helium-linux/releases"
+case "$XBPS_TARGET_MACHINE" in
+	x86_64)
+		_debarch=amd64
+		checksum=679a88ea17e969653e09504a1d01bce155f4e3d2ff366d2571d6d00b985457cc
+		;;
+	aarch64)
+		_debarch=arm64
+		checksum=613bff1d2d324011e2253562a03f486250c49a2b5c24a5104889557b31a07083
+		;;
+esac
+distfiles="https://github.com/imputnet/helium-linux/releases/download/${version}/helium-bin_${version}-1_${_debarch}.deb"
+nostrip=yes
+noshlibprovides=yes
+# Qt UI plugins, loaded only under a Qt desktop.
+skiprdeps="/opt/helium/libqt5_shim.so /opt/helium/libqt6_shim.so"
+
+do_install() {
+	rm opt/helium/apparmor.cfg
+	vmkdir opt
+	vcopy opt/helium opt
+
+	vmkdir usr/bin
+	ln -s /opt/helium/helium-wrapper ${DESTDIR}/usr/bin/helium
+
+	vinstall usr/share/applications/helium.desktop 644 usr/share/applications
+	vinstall usr/share/metainfo/net.imput.helium.metainfo.xml 644 usr/share/metainfo
+	vinstall usr/share/icons/hicolor/256x256/apps/helium.png 644 \
+		usr/share/icons/hicolor/256x256/apps
+	vlicense ${FILESDIR}/LICENSE LICENSE.chromium
+}

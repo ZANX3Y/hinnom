@@ -1,0 +1,17 @@
+# Template file for 'glaze'
+pkgname=glaze
+version=9.1.0
+revision=1
+build_style=cmake
+configure_args="-Dglaze_DEVELOPER_MODE=OFF -DBUILD_TESTING=OFF"
+short_desc="Extremely fast, in-memory JSON and reflection library for modern C++"
+maintainer="zanxey <z@zanxey.com>"
+license="MIT"
+homepage="https://github.com/stephenberry/glaze"
+changelog="https://github.com/stephenberry/glaze/releases"
+distfiles="https://github.com/stephenberry/glaze/archive/refs/tags/v${version}.tar.gz"
+checksum=55f8a675397c505f9bee6c160e1c26b0085868f185d04d7a7727531fdbff4bd4
+
+post_install() {
+	vlicense LICENSE
+}

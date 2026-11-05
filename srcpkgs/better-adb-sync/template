@@ -1,0 +1,15 @@
+# Template file for 'better-adb-sync'
+pkgname=better-adb-sync
+version=1.4.1.20261018
+revision=1
+_commit=e09619169906820707f49a11504ac5ce2abed564
+build_style=python3-pep517
+hostmakedepends="python3-setuptools python3-wheel"
+depends="android-tools python3"
+short_desc="Rsync-like file sync between a computer and an Android device over adb"
+maintainer="zanxey <z@zanxey.com>"
+license="Apache-2.0"
+homepage="https://github.com/jpstotz/better-adb-sync"
+changelog="https://github.com/jpstotz/better-adb-sync/blob/master/CHANGELOG.md"
+distfiles="https://github.com/jpstotz/better-adb-sync/archive/${_commit}.tar.gz"
+checksum=00ee8e0058cf7f89472b0ed6fdcd9fc38b171f12b1b4bccdddc0589bffaaea00

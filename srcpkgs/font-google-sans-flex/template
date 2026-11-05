@@ -1,0 +1,24 @@
+# Template file for 'font-google-sans-flex'
+pkgname=font-google-sans-flex
+version=5.000
+revision=1
+create_wrksrc=yes
+depends="font-util"
+short_desc="Google's variable brand typeface, with width, slant and roundness axes"
+maintainer="zanxey <z@zanxey.com>"
+license="OFL-1.1"
+homepage="https://github.com/googlefonts/googlesans-flex"
+changelog="https://github.com/googlefonts/googlesans-flex/blob/main/CHANGELOG.md"
+distfiles="https://github.com/googlefonts/googlesans-flex/releases/download/v${version}/GoogleSansFlex-v${version}.zip
+ https://raw.githubusercontent.com/googlefonts/googlesans-flex/v${version}/OFL.txt>OFL-${version}.txt"
+checksum="c20b00878dd801d1bfc06d771732447940c7255bf94cf538ce0102c7fb06fa85
+ 831b6e041705873c3e6efb18c4c96202bc41c8be42a456d3d26c47abf14816d0"
+skip_extraction="OFL-${version}.txt"
+font_dirs="/usr/share/fonts/TTF/google-sans-flex"
+provides="font:sans-serif-0_1"
+
+do_install() {
+	vmkdir usr/share/fonts/TTF/google-sans-flex
+	vcopy "*.ttf" usr/share/fonts/TTF/google-sans-flex
+	vlicense ${XBPS_SRCDISTDIR}/${pkgname}-${version}/OFL-${version}.txt OFL.txt
+}

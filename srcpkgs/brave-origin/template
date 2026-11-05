@@ -1,0 +1,50 @@
+# Template file for 'brave-origin'
+pkgname=brave-origin
+version=1.99.55
+revision=1
+archs="x86_64 aarch64"
+create_wrksrc=yes
+# GTK (file dialogs, theming) and PulseAudio are dlopen()ed by Chromium.
+depends="gtk+3 libpulseaudio liberation-fonts-ttf xdg-utils"
+short_desc="Brave web browser without the extra features"
+maintainer="zanxey <z@zanxey.com>"
+license="MPL-2.0"
+homepage="https://brave.com/origin/"
+changelog="https://github.com/brave/brave-browser/releases"
+case "$XBPS_TARGET_MACHINE" in
+	x86_64)
+		_debarch=amd64
+		checksum=6319a48d0ffc205f855b8c2423f70acb5f63b688214f11bb5b610bd31793fc6b
+		;;
+	aarch64)
+		_debarch=arm64
+		checksum=592c45abe257df96ced731736dbb82fde1cf95b897ef9848a3447576696e392b
+		;;
+esac
+distfiles="https://github.com/brave/brave-browser/releases/download/v${version}/brave-origin_${version}_${_debarch}.deb"
+nostrip=yes
+noshlibprovides=yes
+# Qt UI plugins, loaded only under a Qt desktop.
+skiprdeps="/opt/brave.com/brave-origin/libqt5_shim.so /opt/brave.com/brave-origin/libqt6_shim.so"
+
+do_install() {
+	local dir=opt/brave.com/brave-origin size
+
+	rm -r ${dir}/cron ${dir}/apparmor.d ${dir}/default-app-block
+	vmkdir opt/brave.com
+	vcopy ${dir} opt/brave.com
+
+	vmkdir usr/bin
+	ln -s /${dir}/brave-origin ${DESTDIR}/usr/bin/brave-origin
+	ln -s /${dir}/brave-origin ${DESTDIR}/usr/bin/brave-origin-stable
+
+	vinstall usr/share/applications/brave-origin.desktop 644 usr/share/applications
+	vinstall usr/share/applications/com.brave.Origin.desktop 644 usr/share/applications
+	vinstall usr/share/appdata/brave-origin.appdata.xml 644 usr/share/metainfo
+	for size in 16 24 32 48 64 128 256; do
+		vinstall ${dir}/product_logo_${size}.png 644 \
+			usr/share/icons/hicolor/${size}x${size}/apps brave-origin.png
+	done
+	vman usr/share/man/man1/brave-origin-stable.1.gz brave-origin.1
+	vlicense ${dir}/LICENSE
+}

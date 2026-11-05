@@ -1,0 +1,27 @@
+# Template file for 'ddev'
+pkgname=ddev
+version=1.25.5
+revision=1
+build_style=go
+go_import_path=github.com/ddev/ddev
+go_package="${go_import_path}/cmd/ddev ${go_import_path}/cmd/ddev-hostname"
+go_ldflags="-X ${go_import_path}/pkg/versionconstants.DdevVersion=v${version}"
+depends="mkcert"
+short_desc="Docker-based local PHP, Node.js and Python development environments"
+maintainer="zanxey <z@zanxey.com>"
+license="Apache-2.0"
+homepage="https://ddev.com"
+changelog="https://github.com/ddev/ddev/releases"
+distfiles="https://github.com/ddev/ddev/archive/refs/tags/v${version}.tar.gz"
+checksum=e3814c132f8cd53cf32957242bd3bf6bba1199b65d8e16bc9d43d11d6013ec92
+
+post_build() {
+	HOME="${wrksrc}/.home" go run -mod=vendor ./cmd/ddev_gen_autocomplete
+}
+
+post_install() {
+	local c=.gotmp/bin/completions
+	vcompletion ${c}/ddev_bash_completion.sh bash
+	vcompletion ${c}/ddev_zsh_completion.sh zsh
+	vcompletion ${c}/ddev_fish_completion.sh fish
+}

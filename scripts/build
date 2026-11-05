@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+VP=${VOID_PACKAGES:-$ROOT/void-packages}
+
+"$ROOT/scripts/sync"
+
+ORDER="glaze hyprutils hyprwayland-scanner hyprland-protocols hyprlang hyprwire
+hyprcursor hyprgraphics aquamarine hyprtoolkit
+hyprland-guiutils hyprsunset xdg-desktop-portal-hyprland hyprland
+hypridle hyprpolkitagent hyprshutdown"
+
+if [ $# -eq 0 ]; then
+	for p in $ORDER; do
+		[ ! -f "$ROOT/srcpkgs/$p/template" ] || set -- "$@" "$p"
+	done
+	for d in "$ROOT"/srcpkgs/*/; do
+		[ -f "$d/template" ] || continue
+		p=$(basename "$d")
+		case " $* " in *" $p "*) ;; *) set -- "$@" "$p" ;; esac
+	done
+fi
+
+for p; do
+	echo "==> $p"
+	"$VP/xbps-src" clean "$p" >/dev/null 2>&1 || true
+	"$VP/xbps-src" ${XBPS_SRC_FLAGS:-} pkg "$p"
+done
