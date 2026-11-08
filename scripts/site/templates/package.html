@@ -1,0 +1,92 @@
+{% import "components.html" as ui %}
+{% set upstream = package.get("upstream") or {} %}
+{% set latest = upstream.get("latest") or {} %}
+{% set recipe = package.get("template") or {} %}
+{% set source = package.get("source_package") %}
+<details class="package" id="pkg-{{ package.name }}" data-search="{{ package.search_text }}" data-update="{{ 'true' if package.has_update else 'false' }}" data-architectures="{{ package.available_architectures | join(' ') }}">
+  <summary>
+    <span class="package-info">
+      <span class="package-name">{{ package.name }}</span>
+      <span class="package-description">{{ package.get("description") | display }}</span>
+    </span>
+    {% if not package.versions %}
+    <span class="version-cell muted">Not built</span>
+    {% elif package.versions | length == 1 %}
+    <span class="version-cell"><code>{{ package.versions[0] | display }}</code></span>
+    {% else %}
+    <span class="version-cell">
+      {% for build in package.builds %}
+      <span class="version-entry">
+        <code>{{ build.package_version | display }}</code>
+        <span class="version-arch">{{ build.repository_architecture | display }}</span>
+      </span>
+      {% endfor %}
+    </span>
+    {% endif %}
+    {% if package.upstream_update %}
+    <span class="update-cell">
+      <code{% if package.upstream_update.available %} class="has-update"{% endif %}>{{ package.upstream_update.value | display }}</code>
+      {% if package.upstream_update.note %}
+      <span class="cell-note">{{ package.upstream_update.note }}</span>
+      {% endif %}
+    </span>
+    {% else %}
+    <span class="update-cell muted" aria-label="No known upstream update">—</span>
+    {% endif %}
+    <span class="architecture-cell">
+      {% for architecture in package.available_architectures %}
+      {{ ui.architecture_badge(architecture) }}
+      {% else %}
+      <span class="muted">—</span>
+      {% endfor %}
+    </span>
+    <span class="status-cell">{{ ui.badge(package.status) }}</span>
+    <svg class="row-arrow" aria-hidden="true" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m4 2 4 4-4 4"/></svg>
+  </summary>
+  <div class="package-body">
+    <div class="package-detail-grid">
+      <dl class="metadata">
+        <div><dt>License</dt><dd>{{ package.get("license") | display }}</dd></div>
+        <div>
+          <dt>Source package</dt>
+          <dd>
+            {% if source in known_names and source != package.name %}
+            {{ ui.link("#pkg-" ~ source, source) }}
+            {% else %}
+            {{ source | display }}
+            {% endif %}
+          </dd>
+        </div>
+        <div><dt>Template</dt><dd><code>{{ recipe.get("package_version") | display }}</code></dd></div>
+        <div><dt>Upstream checked</dt><dd>{{ ui.time(upstream.get("checked_at")) }}</dd></div>
+        {% if recipe.get("commit") %}
+        <div><dt>Pinned commit</dt><dd><code title="{{ recipe.commit }}">{{ recipe.commit[:12] }}</code></dd></div>
+        {% endif %}
+      </dl>
+      <div class="package-actions">
+        {% if package.builds %}
+        <p class="step-label">Install package</p>
+        {{ ui.command("sudo xbps-install " ~ package.name, "Copy install command for " ~ package.name) }}
+        {% else %}
+        <p class="step-label">No build has been published yet.</p>
+        {% endif %}
+        <div class="package-links">
+          {{ ui.link(package.get("homepage"), "Homepage ↗") }}
+          {{ ui.link(package.get("template_url"), "Template ↗") }}
+          {{ ui.link(latest.get("url"), "Upstream ↗") }}
+          {{ ui.link("#pkg-" ~ package.name, "Permalink ↗") }}
+        </div>
+      </div>
+    </div>
+    {% if upstream.get("status") == "unknown" %}
+    <p class="check-note">Upstream check failed. {% if upstream.get("last_success_at") %}Last successful check: {{ ui.time(upstream.last_success_at) }}.{% else %}No previous result is available.{% endif %}</p>
+    {% elif package.status == "unknown" %}
+    <p class="check-note">The upstream state of this published build could not be determined.</p>
+    {% endif %}
+    <div class="build-list">
+      {% for build in package.builds %}
+      {% include "build.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</details>

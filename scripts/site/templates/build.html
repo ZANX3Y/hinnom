@@ -1,0 +1,25 @@
+{% import "components.html" as ui %}
+{% set dependencies = build.get("dependencies", []) %}
+{% set checksum = build.get("sha256") %}
+<div class="build">
+  <div class="build-header">
+    {{ ui.architecture_badge(build.repository_architecture) }}
+    <code>{{ build.package_version | display }}</code>
+    {{ ui.badge(build.status) }}
+    <span class="muted">{{ build.get("download_size") | size_label }} download{% if build.architecture == "noarch" %} · architecture-independent{% endif %}</span>
+    {{ ui.link(build.get("download_url"), "Download .xbps ↗", "download-link") }}
+  </div>
+  {% if dependencies or checksum %}
+  <details class="build-extra">
+    <summary>Dependencies ({{ dependencies | length }}) and checksum</summary>
+    <ul class="dependency-list">
+      {% for dependency in dependencies %}
+      <li>{{ dependency | display }}</li>
+      {% endfor %}
+    </ul>
+    {% if checksum %}
+    <div class="checksum"><span>SHA-256</span><code>{{ checksum }}</code></div>
+    {% endif %}
+  </details>
+  {% endif %}
+</div>

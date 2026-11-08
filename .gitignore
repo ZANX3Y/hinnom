@@ -1,2 +1,4 @@
 void-packages/
 __pycache__/
+/packages.json
+/dist/

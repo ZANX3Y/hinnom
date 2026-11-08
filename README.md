@@ -1,6 +1,8 @@
-# hinnom
+# <img src="scripts/site/hinnom.svg" alt="hinnom" width="332">
 
 Void Linux package repository.
+
+[Browse packages](https://hinnom.znx.pw/)
 
 ## Installation
 
@@ -21,40 +23,6 @@ Install packages:
 ```sh
 sudo xbps-install <package>
 ```
-
-## Packages
-
-- aquamarine
-- better-adb-sync
-- brave-origin
-- darkly
-- ddev
-- desktop-plus
-- equibop
-- font-google-sans-flex
-- glaze
-- helium-browser
-- hyprcursor
-- hyprgraphics
-- hypridle
-- hyprland
-- hyprland-guiutils
-- hyprland-protocols
-- hyprlang
-- hyprlock
-- hyprpaper
-- hyprpicker
-- hyprpolkitagent
-- hyprshutdown
-- hyprsunset
-- hyprtoolkit
-- hyprutils
-- hyprwayland-scanner
-- hyprwire
-- mkcert
-- popsicle
-- spotify-launcher
-- xdg-desktop-portal-hyprland
 
 ## Building
 

@@ -1,0 +1,32 @@
+{% macro link(url, label, class_name=none) -%}
+  {% set href = url | safe_url %}
+  {%- if href -%}
+  <a href="{{ href }}"{% if class_name %} class="{{ class_name }}"{% endif %}>{{ label | display }}</a>
+  {%- endif %}
+{%- endmacro %}
+
+{% macro time(value, relative=false) -%}
+  {% if value -%}
+  {% set label = value | time_label -%}
+  <time datetime="{{ value }}" title="{{ label }}"{% if relative %} data-relative{% endif %}>{{ label }}</time>
+  {%- else -%}
+  —
+  {%- endif %}
+{%- endmacro %}
+
+{% macro badge(status) -%}
+  {% set status = status if status in statuses else "unknown" %}
+  {%- set label, description = statuses[status] -%}
+  <span class="status status-{{ status }}" title="{{ description }}">{{ label }}</span>
+{%- endmacro %}
+
+{% macro architecture_badge(architecture) -%}
+  <span class="arch">{{ architecture | display }}</span>
+{%- endmacro %}
+
+{% macro command(value, label) -%}
+  <div class="command">
+    <code>{{ value }}</code>
+    <button class="copy-button" type="button" data-copy="{{ value }}" aria-label="{{ label }}" hidden>Copy</button>
+  </div>
+{%- endmacro %}

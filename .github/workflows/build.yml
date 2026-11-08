@@ -3,7 +3,7 @@ name: Build repository
 on:
   push:
     branches: [master]
-    paths: ['srcpkgs/**', 'common/**', 'scripts/**', '.github/workflows/build.yml']
+    paths: ['srcpkgs/**', 'common/**', 'scripts/**', '!scripts/docs/**', '!scripts/site/**', '!scripts/tests/**', '.github/workflows/build.yml']
   workflow_dispatch:
 
 concurrency:

@@ -1,0 +1,134 @@
+name: Publish website
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - srcpkgs/**
+      - scripts/build-site
+      - scripts/generate-catalog
+      - scripts/package_catalog.py
+      - scripts/package_site.py
+      - scripts/site/**
+      - scripts/tests/**
+      - .github/workflows/website.yml
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_run:
+    workflows: [Build repository]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: website
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: >-
+      github.ref == 'refs/heads/master' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: ghcr.io/void-linux/void-glibc-full
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      commit: ${{ steps.checkout.outputs.commit }}
+
+    steps:
+      - name: Install build dependencies
+        shell: sh
+        run: |
+          xbps-install -Syu xbps
+          xbps-install -yu
+          xbps-install -y bash git python3 python3-Jinja2 tar zstd
+
+      - uses: actions/checkout@v7
+        id: checkout
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Run tests
+        run: python3 -B -m unittest discover -s scripts/tests -v
+
+      - name: Restore previous catalog
+        id: catalog-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/hinnom-catalog/packages.json
+          key: hinnom-catalog-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: hinnom-catalog-v1-
+
+      - name: Generate catalog and build site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Keep new output separate from the cache to distinguish lookup errors
+          # from failures that prevent a new catalog from being written.
+          catalog_file="$RUNNER_TEMP/hinnom-catalog.new.json"
+          previous_catalog="$RUNNER_TEMP/hinnom-catalog/packages.json"
+          catalog_arguments=(--output "$catalog_file")
+          if [[ -f "$previous_catalog" ]]; then
+            catalog_arguments+=(--previous "$previous_catalog")
+          fi
+
+          rm -f "$catalog_file"
+          catalog_status=0
+          python3 -B scripts/generate-catalog "${catalog_arguments[@]}" || catalog_status=$?
+          if (( catalog_status != 0 )); then
+            if (( catalog_status != 2 )) || [[ ! -s "$catalog_file" ]]; then
+              exit "$catalog_status"
+            fi
+            echo "::warning::Some upstream checks failed. The catalog marks them unknown and retains any last-known results."
+          fi
+
+          python3 -B scripts/build-site --catalog "$catalog_file"
+          mkdir -p "$RUNNER_TEMP/hinnom-catalog"
+          cp "$catalog_file" "$previous_catalog"
+
+      - name: Save current catalog
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/hinnom-catalog/packages.json
+          key: ${{ steps.catalog-cache.outputs.cache-primary-key }}
+
+      - name: Upload site
+        uses: actions/upload-artifact@v7
+        with:
+          name: website
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.build.outputs.commit }}
+          persist-credentials: false
+
+      - name: Download site
+        uses: actions/download-artifact@v8
+        with:
+          name: website
+          path: dist/
+
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: deploy --config scripts/site/wrangler.toml
