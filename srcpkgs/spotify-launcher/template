@@ -1,6 +1,6 @@
 # Template file for 'spotify-launcher'
 pkgname=spotify-launcher
-version=0.6.6
+version=0.6.7
 revision=1
 archs="x86_64"
 build_style=cargo
@@ -10,13 +10,14 @@ makedepends="liblzma-devel"
 # the rest is what the downloaded Spotify client links against.
 depends="sequoia-sqv zenity alsa-lib gtk+3 libatomic libayatana-appindicator
  libgbm nss"
+checkdepends="sequoia-sqv"
 short_desc="Client for Spotify's apt repository"
 maintainer="zanxey <z@zanxey.com>"
 license="MIT, Apache-2.0"
 homepage="https://github.com/kpcyrd/spotify-launcher"
 changelog="https://github.com/kpcyrd/spotify-launcher/releases"
 distfiles="https://github.com/kpcyrd/spotify-launcher/archive/refs/tags/v${version}.tar.gz"
-checksum=aa24c78bfe851699c5d19a98f6a8b7dfe94d9d55c7572bb8577cc651b0f80f61
+checksum=f88042129a9fe07fcd8199e5f5fcc64263de8ede10959ed5ce02a8f3d991164a
 conf_files="/etc/spotify-launcher.conf"
 
 post_install() {
