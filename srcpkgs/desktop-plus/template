@@ -1,7 +1,7 @@
 # Template file for 'desktop-plus'
 pkgname=desktop-plus
-version=3.6.10.0
-revision=2
+version=3.6.11.0
+revision=1
 archs="x86_64 aarch64"
 create_wrksrc=yes
 # libnotify is dlopen()ed by Electron for notifications.
@@ -14,11 +14,11 @@ changelog="https://github.com/desktop-plus/desktop-plus/releases"
 case "$XBPS_TARGET_MACHINE" in
 	x86_64)
 		_debarch=x86_64
-		checksum=e5e2f2d747fda05e6a22ff8864c27e8cadd981f7caa7dbfe2afe93aa7786e215
+		checksum=c87e84ddf2b4219ea550150ee526cd07380a42b78b55a781446c8203e14b0a50
 		;;
 	aarch64)
 		_debarch=arm64
-		checksum=edb45c6e76dc5a415de47d340824be865d3e87e84a78d4c4821163a27eaad17a
+		checksum=db10da6dfe97761dd0e3eb38182dc3ff704bf4e98fd8392558ce59a56f6aa8ca
 		;;
 esac
 distfiles="https://github.com/desktop-plus/desktop-plus/releases/download/v${version}/DesktopPlus-v${version}-linux-${_debarch}.deb"
