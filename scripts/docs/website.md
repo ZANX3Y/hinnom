@@ -24,18 +24,25 @@ alternate catalog and output paths.
 
 ## Deployment
 
-The [Publish website workflow](../../.github/workflows/website.yml) tests, builds,
-and deploys on `master` every six hours, on relevant pushes, after successful
-package builds, or through **Run workflow**.
+The [Publish website workflow](../../.github/workflows/website.yml) checks hourly
+and refreshes catalogs that are at least six hours old. GitHub may delay or skip
+scheduled events; hourly checks give a missed refresh another chance. Relevant
+pushes to `master`, successful package builds, and **Run workflow** refresh
+immediately.
 
-Add these repository Actions secrets:
+Create the `hinnom` Worker in Cloudflare first, then add these repository Actions
+secrets:
 
 | Secret | Value |
 | --- | --- |
 | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID |
-| `CLOUDFLARE_API_TOKEN` | A token with `Workers Scripts Write` for that account |
+| `CLOUDFLARE_API_TOKEN` | A token with Workers Editor access to `hinnom` |
 
-The first deployment creates the `hinnom` Worker. Attach a
+For a token scoped to **Specified Workers**, select `hinnom` after creating it.
+Creating Workers through the API requires product-level Workers Admin access.
+See [Workers permissions](https://developers.cloudflare.com/workers/authorization/workers/).
+
+Attach a
 [custom domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
 The workflow caches upstream results between runs. Failed upstream checks can

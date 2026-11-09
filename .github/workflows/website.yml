@@ -13,7 +13,7 @@ on:
       - scripts/tests/**
       - .github/workflows/website.yml
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 * * * *'
   workflow_run:
     workflows: [Build repository]
     types: [completed]
@@ -28,10 +28,52 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  refresh:
     if: >-
       github.ref == 'refs/heads/master' &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      needed: ${{ steps.freshness.outputs.needed }}
+
+    steps:
+      - name: Check catalog freshness
+        id: freshness
+        env:
+          TRIGGER_EVENT: ${{ github.event_name }}
+        run: |
+          python3 - <<'PY'
+          from datetime import datetime, timedelta, timezone
+          import json
+          import os
+          from urllib.request import Request, urlopen
+
+          needed = True
+          if os.environ["TRIGGER_EVENT"] == "schedule":
+              try:
+                  request = Request(
+                      "https://hinnom.znx.pw/packages.json",
+                      headers={"User-Agent": "hinnom-refresh", "Cache-Control": "no-cache"},
+                  )
+                  with urlopen(request, timeout=15) as response:
+                      catalog = json.load(response)
+                  if catalog["schema_version"] != 1 or not isinstance(catalog["packages"], list):
+                      raise ValueError("Invalid catalog")
+                  generated = datetime.fromisoformat(catalog["generated_at"])
+                  age = datetime.now(timezone.utc) - generated
+                  needed = not timedelta(0) <= age < timedelta(hours=6)
+                  print(f"Published catalog: {generated.isoformat()} (age {age})")
+              except (OSError, ValueError, TypeError, KeyError) as error:
+                  print(f"Cannot determine catalog freshness; refreshing: {error}")
+          print("Refreshing the website" if needed else "Catalog is fresh; skipping rebuild")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"needed={str(needed).lower()}\n")
+          PY
+
+  build:
+    needs: refresh
+    if: needs.refresh.outputs.needed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
