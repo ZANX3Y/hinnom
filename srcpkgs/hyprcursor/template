@@ -1,7 +1,7 @@
 # Template file for 'hyprcursor'
 pkgname=hyprcursor
-version=0.1.13
-revision=3
+version=0.1.14
+revision=1
 build_style=cmake
 hostmakedepends="pkg-config"
 makedepends="cairo-devel hyprlang-devel librsvg-devel libzip-devel
@@ -12,7 +12,7 @@ license="BSD-3-Clause"
 homepage="https://github.com/hyprwm/hyprcursor"
 changelog="https://github.com/hyprwm/hyprcursor/releases"
 distfiles="https://github.com/hyprwm/hyprcursor/archive/refs/tags/v${version}.tar.gz"
-checksum=82af8b2ce27242ffdd6baebaa71b3f6c8665dc25c52bfcfccc16912622896af8
+checksum=f835995a1225ab169723d5e4e7510e31231dbb3048c4da6de6f6a51794e4cb38
 
 post_install() {
 	vlicense LICENSE
