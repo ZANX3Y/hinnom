@@ -1,6 +1,6 @@
 # Template file for 'hyprland'
 pkgname=hyprland
-version=0.57.1
+version=0.57.2
 revision=1
 build_style=cmake
 configure_args="-DNO_SYSTEMD=ON"
@@ -11,7 +11,7 @@ makedepends="aquamarine-devel cairo-devel glaze glslang-devel hyprcursor-devel
  hyprwire-devel lcms2-devel libcanberra-devel libdrm-devel libei-devel
  libgbm-devel libglvnd-devel libinput-devel libuuid-devel libxcb-devel
  libXcursor-devel libxkbcommon-devel lua55-devel muparser-devel pango-devel
- pixman-devel re2-devel readline-devel sdbus-c++-devel SPIRV-Tools-devel
+ pixman-devel re2-devel readline-devel SPIRV-Tools-devel
  tomlplusplus-devel udis86-devel wayland-devel wayland-protocols
  xcb-util-errors-devel xcb-util-wm-devel xorg-server-xwayland"
 depends="hyprland-guiutils xorg-server-xwayland"
@@ -21,7 +21,7 @@ license="BSD-3-Clause"
 homepage="https://hypr.land/"
 changelog="https://github.com/hyprwm/Hyprland/releases"
 distfiles="https://github.com/hyprwm/Hyprland/releases/download/v${version}/source-v${version}.tar.gz"
-checksum=24e7428f83115e58e5fc81f100f6b73691dcaaf7a503087391e44327a71c43ab
+checksum=34dbec0738ab88c8228caf89385662688ab1601ea58fbe5c60a6b6ab383db46d
 
 pre_configure() {
 	# GCC 14 has no #embed; generate the array the patched header includes
