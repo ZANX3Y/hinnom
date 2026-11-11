@@ -1,12 +1,12 @@
 # Template file for 'popsicle'
 pkgname=popsicle
-version=1.3.3.20261106
+version=1.3.3.20261110
 revision=1
-_commit=78abc27648b5df8f1310c9e74358f6c27d70e36e
+_commit=3b80eee93977a5892b4d6ef76c3fedf09495b830
 build_style=cargo
 make_build_args="--workspace"
 hostmakedepends="help2man pkg-config"
-makedepends="dbus-devel libxkbcommon-devel wayland-devel"
+makedepends="libxkbcommon-devel wayland-devel"
 # Window-system and graphics libraries are loaded dynamically by the COSMIC UI.
 depends="libglvnd libX11 libXcursor libXi libXrandr libxkbcommon
  libxkbcommon-x11 udisks2 wayland xdg-desktop-portal xdg-utils"
@@ -15,11 +15,9 @@ maintainer="zanxey <z@zanxey.com>"
 license="MIT, GPL-2.0-only"
 homepage="https://github.com/pop-os/popsicle"
 distfiles="https://github.com/pop-os/popsicle/archive/${_commit}.tar.gz"
-checksum=aa411e7aaa34caef19fe523b6c6c87eb9cb374a5c9c1ba3a1e342dfad6ce734e
+checksum=fbf162856bbc0e5e22b2b6d97b897bdd712480c6fd1c8db563475f0c47b99788
 
 post_patch() {
-	# time < 0.3.35 fails to build with Rust >= 1.80.
-	cargo update --package time:0.3.31 --precise 0.3.36
 	rm rust-toolchain
 }
 
