@@ -1,6 +1,6 @@
 # Template file for 'brave-origin'
 pkgname=brave-origin
-version=1.99.56
+version=1.99.57
 revision=1
 archs="x86_64 aarch64"
 create_wrksrc=yes
@@ -14,11 +14,11 @@ changelog="https://github.com/brave/brave-browser/releases"
 case "$XBPS_TARGET_MACHINE" in
 	x86_64)
 		_debarch=amd64
-		checksum=b5a98b35bcbade76fd32b3b32241dd286cc65ef452ae59dccf1f0dac02677baf
+		checksum=4cb1ad4ea0e5fa52b4fddd59362e7a9d94276657fe16a6203d0c1d25bd8f730e
 		;;
 	aarch64)
 		_debarch=arm64
-		checksum=6170d8fd3cf928ec152743d2cf290d08b7598d6d84f03cd9b5408049a7169f2d
+		checksum=318ce5b100a2d28d638c037424bc732269d30f8520dedf00f432247b232fcc19
 		;;
 esac
 distfiles="https://github.com/brave/brave-browser/releases/download/v${version}/brave-origin_${version}_${_debarch}.deb"
