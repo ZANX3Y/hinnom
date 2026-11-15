@@ -1,6 +1,6 @@
 # Template file for 'equibop'
 pkgname=equibop
-version=3.3.2
+version=3.3.4
 revision=1
 archs="x86_64 aarch64"
 create_wrksrc=yes
@@ -15,11 +15,11 @@ changelog="https://github.com/Equicord/Equibop/releases"
 case "$XBPS_TARGET_MACHINE" in
 	x86_64)
 		_debarch=amd64
-		checksum=3520d5d1fa647e8423f9e6f76a991367508abe1fadb9f37994a5fdb2d6d75625
+		checksum=19eebed0589a36cb30040d8aa0ac3905cfe66c4404db866970890d607e6d2815
 		;;
 	aarch64)
 		_debarch=arm64
-		checksum=5c4dec4af2285980e86632f9478f54dee0f73cb2e918ff7a04c92f49c8491e40
+		checksum=1b7fd1c671363161a6b9030687e6b0b0e2f868a456acb66dd13cebca0a3524de
 		;;
 esac
 distfiles="https://github.com/Equicord/Equibop/releases/download/v${version}/equibop_${version}_${_debarch}.deb"
