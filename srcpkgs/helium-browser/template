@@ -1,6 +1,6 @@
 # Template file for 'helium-browser'
 pkgname=helium-browser
-version=0.21.3.1
+version=0.22.1.1
 revision=1
 archs="x86_64 aarch64"
 create_wrksrc=yes
@@ -14,11 +14,11 @@ changelog="https://github.com/imputnet/helium-linux/releases"
 case "$XBPS_TARGET_MACHINE" in
 	x86_64)
 		_debarch=amd64
-		checksum=98f940589caa46357218ee6c6b95a6b5d6681b4f33c72e4189c62d155a38145b
+		checksum=161687c8772d42fa143f9662679ccec871d68d5ba2b1144b8b6c25439f74328d
 		;;
 	aarch64)
 		_debarch=arm64
-		checksum=be6e69a99491d21d88edb6cf61b3ab0f207c7d7ea4c4d2cc0aa75060542435e5
+		checksum=678ad6d0b44961f09ff00f10e9b9580dd5f5aac9764e7c900f897036ce8b7920
 		;;
 esac
 distfiles="https://github.com/imputnet/helium-linux/releases/download/${version}/helium-bin_${version}-1_${_debarch}.deb"
