@@ -1,6 +1,6 @@
 # Template file for 'ddev'
 pkgname=ddev
-version=1.25.5
+version=1.25.6
 revision=1
 build_style=go
 go_import_path=github.com/ddev/ddev
@@ -13,7 +13,7 @@ license="Apache-2.0"
 homepage="https://ddev.com"
 changelog="https://github.com/ddev/ddev/releases"
 distfiles="https://github.com/ddev/ddev/archive/refs/tags/v${version}.tar.gz"
-checksum=e3814c132f8cd53cf32957242bd3bf6bba1199b65d8e16bc9d43d11d6013ec92
+checksum=289015fbe4eb14e060f45116a91318cd36d1fe6c9aa6cba81d3228a403c22c05
 
 post_build() {
 	HOME="${wrksrc}/.home" go run -mod=vendor ./cmd/ddev_gen_autocomplete
