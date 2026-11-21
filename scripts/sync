@@ -17,6 +17,18 @@ if [ -f "$SYNCED" ]; then
 	done < "$SYNCED"
 fi
 git -C "$VP" checkout -q -- common/shlibs
+
+# Keep the default checkout on Void's current master so builds link against
+# the libraries users actually have. A tree passed in VOID_PACKAGES is left alone.
+if [ -z "${VOID_PACKAGES:-}" ]; then
+	old=$(git -C "$VP" rev-parse HEAD)
+	if git -C "$VP" fetch -q --depth 1 origin master; then
+		git -C "$VP" reset -q --hard FETCH_HEAD
+		[ "$(git -C "$VP" rev-parse HEAD)" = "$old" ] || "$VP/xbps-src" bootstrap-update
+	else
+		echo "sync: cannot update void-packages; using $(git -C "$VP" log -1 --format=%cs)" >&2
+	fi
+fi
 : > "$SYNCED"
 
 for dir in "$ROOT"/srcpkgs/*/; do
