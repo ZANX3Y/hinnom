@@ -1,0 +1,55 @@
+name: Check Void compatibility
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - scripts/check-compat
+      - scripts/void_compat.py
+      - scripts/package_catalog.py
+      - .github/workflows/compat.yml
+  schedule:
+    - cron: '35 5 * * *'
+  workflow_run:
+    workflows: [Build repository]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: ghcr.io/void-linux/void-glibc-full
+
+    steps:
+      - name: Install dependencies
+        run: |
+          xbps-install -Syu xbps
+          xbps-install -yu
+          xbps-install -y python3
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check published packages against Void
+        run: |
+          status=0
+          python3 -B scripts/check-compat > "$RUNNER_TEMP/compat.txt" || status=$?
+          cat "$RUNNER_TEMP/compat.txt"
+          {
+            echo '### Void compatibility'
+            echo '```'
+            cat "$RUNNER_TEMP/compat.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -eq 1 ]; then
+            echo "::error::Published packages no longer fit the current Void repositories. Bump the revision of each affected template to rebuild it."
+          fi
+          exit "$status"
