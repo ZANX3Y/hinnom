@@ -20,6 +20,12 @@
   <span class="status status-{{ status }}" title="{{ description }}">{{ label }}</span>
 {%- endmacro %}
 
+{% macro snapshot_badge(recipe) -%}
+  {% if recipe.get("commit") -%}
+  <span class="snapshot-line"><span class="snapshot" title="Built from upstream Git commit {{ recipe.commit[:12] }}">git</span></span>
+  {%- endif %}
+{%- endmacro %}
+
 {% macro architecture_badge(architecture) -%}
   <span class="arch">{{ architecture | display }}</span>
 {%- endmacro %}

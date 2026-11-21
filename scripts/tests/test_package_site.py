@@ -122,6 +122,14 @@ class SiteTests(unittest.TestCase):
         self.assertIn("b" * 12, content)
         self.assertIn("Pinned commit", content)
 
+    def test_only_snapshots_carry_the_git_badge(self):
+        catalog = fixture()
+        self.assertNotIn('class="snapshot"', site.render_site(catalog))
+        catalog["packages"][0]["template"]["commit"] = "a" * 40
+        html = site.render_site(catalog)
+        self.assertEqual(html.count('class="snapshot"'), 1)
+        self.assertIn("Built from upstream Git commit " + "a" * 12, html)
+
     def test_multiple_architectures_keep_their_versions_and_enable_filter(self):
         catalog = fixture()
         catalog["repositories"].append({"architecture": "aarch64", "url": "https://hinnom.znx.pw/aarch64"})

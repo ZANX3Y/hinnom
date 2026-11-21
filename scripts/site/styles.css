@@ -518,6 +518,20 @@ summary::-webkit-details-marker {
   color: var(--accent);
 }
 
+.snapshot-line {
+  display: block;
+  margin-top: 5px;
+  line-height: 1;
+}
+.snapshot {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--faint);
+  font-size: 9px;
+  line-height: 1.6;
+}
 .cell-note {
   display: block;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -849,6 +863,11 @@ summary::-webkit-details-marker {
     flex-wrap: wrap;
     gap: 3px 8px;
     align-items: baseline;
+  }
+
+  .snapshot-line {
+    flex-basis: 100%;
+    margin-top: 0;
   }
 
   .version-cell::before {

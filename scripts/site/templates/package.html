@@ -12,7 +12,7 @@
     {% if not package.versions %}
     <span class="version-cell muted">Not built</span>
     {% elif package.versions | length == 1 %}
-    <span class="version-cell"><code>{{ package.versions[0] | display }}</code></span>
+    <span class="version-cell"><code>{{ package.versions[0] | display }}</code>{{ ui.snapshot_badge(recipe) }}</span>
     {% else %}
     <span class="version-cell">
       {% for build in package.builds %}
@@ -21,6 +21,7 @@
         <span class="version-arch">{{ build.repository_architecture | display }}</span>
       </span>
       {% endfor %}
+      {{ ui.snapshot_badge(recipe) }}
     </span>
     {% endif %}
     {% if package.upstream_update %}
