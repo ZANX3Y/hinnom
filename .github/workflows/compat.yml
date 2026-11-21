@@ -17,7 +17,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
+
+concurrency:
+  group: compat
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -32,16 +37,22 @@ jobs:
         run: |
           xbps-install -Syu xbps
           xbps-install -yu
-          xbps-install -y python3
+          xbps-install -y git github-cli python3
 
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false
+          ref: master
 
       - name: Check published packages against Void
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          before=$(git rev-parse HEAD)
           status=0
-          python3 -B scripts/check-compat > "$RUNNER_TEMP/compat.txt" || status=$?
+          python3 -B scripts/check-compat --commit > "$RUNNER_TEMP/compat.txt" || status=$?
           cat "$RUNNER_TEMP/compat.txt"
           {
             echo '### Void compatibility'
@@ -49,7 +60,13 @@ jobs:
             cat "$RUNNER_TEMP/compat.txt"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$(git rev-parse HEAD)" != "$before" ]; then
+            # Pushes made with GITHUB_TOKEN start no workflows, so start the build directly.
+            git push origin HEAD:master || { git pull --rebase origin master && git push origin HEAD:master; }
+            gh workflow run build.yml --ref master
+            echo "::notice::Bumped revisions to rebuild packages against current Void libraries; started a build."
+          fi
           if [ "$status" -eq 1 ]; then
-            echo "::error::Published packages no longer fit the current Void repositories. Bump the revision of each affected template to rebuild it."
+            echo "::error::Published packages no longer fit the current Void repositories and need a manual fix."
           fi
           exit "$status"

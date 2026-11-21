@@ -2,10 +2,12 @@ from contextlib import redirect_stderr, redirect_stdout
 from io import BytesIO, StringIO
 from pathlib import Path
 import plistlib
+import subprocess
 import sys
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import void_compat as compat
@@ -57,7 +59,7 @@ class CompatibilityTests(unittest.TestCase):
         self.published = published_index()
 
     def check(self):
-        return compat.check_compatibility(self.published, self.void)
+        return [(problem.package, problem.detail) for problem in compat.check_compatibility(self.published, self.void)]
 
     def test_compatible_repositories_have_no_problems(self):
         self.assertEqual(self.check(), [])
@@ -88,6 +90,87 @@ class CompatibilityTests(unittest.TestCase):
         self.void["hyprlock"] = package(requires=["libhyprutils.so.10"])
         self.void["hyprutils-compat"] = package(provides=["libhyprutils.so.10"])
         self.assertEqual(self.check(), [])
+
+
+TEMPLATE = """# Template file for 'darkly'
+pkgname=darkly
+version=0.5.45
+revision=1
+short_desc="Modern style"
+distfiles="https://github.com/Bali10050/Darkly/archive/v${version}.tar.gz"
+
+darkly-qt5_package() {
+	short_desc+=" - Qt5 style"
+}
+"""
+
+
+class BumpTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.root = Path(self.directory.name)
+        (self.root / "darkly").mkdir()
+        self.template = self.root / "darkly" / "template"
+        self.template.write_text(TEMPLATE)
+        self.published = {
+            "darkly": {"pkgver": "darkly-0.5.45_1", "sourcepkg": "darkly", **package(requires=["libQt6Core.so.6"])},
+            "darkly-qt5": {"pkgver": "darkly-qt5-0.5.45_1", "sourcepkg": "darkly", **package(requires=["libQt5Core.so.5"])},
+        }
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def bump(self, *problems):
+        return compat.bump_revisions(list(problems), self.published, self.root)
+
+    def test_missing_libraries_bump_the_source_template_once(self):
+        bumped, unhandled = self.bump(
+            compat.Problem("darkly", "soname", "links against libQt6Core.so.6, which no package provides"),
+            compat.Problem("darkly-qt5", "soname", "links against libQt5Core.so.5, which no package provides"),
+        )
+        self.assertEqual(unhandled, [])
+        self.assertEqual(list(bumped), ["darkly"])
+        self.assertEqual(bumped["darkly"][0], "darkly-0.5.45_1")
+        self.assertEqual(len(bumped["darkly"][1]), 2)
+        self.assertEqual(self.template.read_text(), TEMPLATE.replace("revision=1", "revision=2"))
+
+    def test_pending_rebuild_is_not_bumped_again(self):
+        self.template.write_text(TEMPLATE.replace("revision=1", "revision=2"))
+        bumped, unhandled = self.bump(compat.Problem("darkly", "soname", "links against libQt6Core.so.6, which no package provides"))
+        self.assertEqual(bumped, {})
+        self.assertIn("template 0.5.45_2 is awaiting a rebuild", unhandled[0].detail)
+        self.assertIn("revision=2", self.template.read_text())
+
+    def test_dependencies_of_a_bumped_package_ride_along(self):
+        soname = compat.Problem("darkly", "soname", "links against libQt6Core.so.6, which no package provides")
+        dependency = compat.Problem("darkly-qt5", "dependency", "depends on qt6-core>=6, which no package provides")
+        bumped, unhandled = self.bump(soname, dependency)
+        self.assertEqual(unhandled, [])
+        self.assertEqual(bumped["darkly"][1], [soname, dependency])
+
+    def test_dependency_and_replacement_problems_need_manual_fixes(self):
+        problems = [compat.Problem("darkly", "dependency", "depends on qt6-core>=6, which no package provides"),
+                    compat.Problem("darkly", "replaced", "replaces Void's libfoo.so.1, which Void's foo still links against")]
+        bumped, unhandled = self.bump(*problems)
+        self.assertEqual((bumped, unhandled), ({}, problems))
+        self.assertEqual(self.template.read_text(), TEMPLATE)
+
+    def test_commit_records_each_bump(self):
+        def git(*args):
+            return subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True, text=True).stdout
+        git("init", "-q")
+        git("-c", "user.name=test", "-c", "user.email=test@example.org", "commit", "-q", "--allow-empty", "-m", "init")
+        git("add", ".")
+        git("-c", "user.name=test", "-c", "user.email=test@example.org", "commit", "-q", "-m", "add darkly")
+        problem = compat.Problem("darkly-qt5", "soname", "links against libQt5Core.so.5, which no package provides")
+        bumped, _ = self.bump(problem)
+        with patch.dict("os.environ", {"GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.org",
+                                       "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.org"}):
+            compat.commit_bumps(bumped, self.root)
+        message = git("log", "-1", "--format=%B")
+        self.assertTrue(message.startswith("darkly: rebuild for current Void libraries\n\ndarkly-0.5.45_1 needs libraries"))
+        self.assertIn("- darkly-qt5 links against libQt5Core.so.5", message)
+        self.assertEqual(git("status", "--porcelain"), "")
 
 
 class CommandTests(unittest.TestCase):

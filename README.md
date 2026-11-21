@@ -38,5 +38,8 @@ available, or 2 when any lookup fails.
 `check-compat` checks the published packages against Void's current
 repositories. It reports shared libraries and dependencies that no package
 provides any more, and Void packages that still need a library replaced by one
-of these templates. It exits with 0 when everything fits, 1 when a package needs
-a rebuild, or 2 when a repository cannot be read.
+of these templates. With `--bump`, it bumps the revision of each template whose
+build links against a missing library, unless that template is already awaiting
+a rebuild; `--commit` also commits each bump. It exits with 0 when everything
+fits or was bumped, 1 when a package needs a manual fix, or 2 when a repository
+cannot be read.
