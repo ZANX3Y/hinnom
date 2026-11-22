@@ -7,10 +7,11 @@ import re
 import shutil
 import sys
 from urllib.parse import urlparse
+from xml.sax.saxutils import escape
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateError, select_autoescape
 
-from package_catalog import CatalogError, ROOT, document_packages, load_json, write_json
+from package_catalog import CatalogError, REPOSITORY_URL, ROOT, document_packages, load_json, write_json
 
 
 SITE = Path(__file__).resolve().parent / "site"
@@ -53,23 +54,24 @@ def size_label(value):
         size /= 1024
 
 
-def upstream_update(package):
+def status_summary(package):
+    """Return what the status column shows, or None when the package needs no attention."""
+    status = package["status"]
+    if status in ("current", "unpublished"):
+        return None
     upstream = package.get("upstream") or {}
     latest = upstream.get("latest")
-    if latest and upstream.get("stale"):
-        value = latest["version"] if latest["kind"] != "commit" else latest["ref"][:12]
-        return {"value": value, "note": "last known", "available": False}
-    if package["status"] in ("outdated", "awaiting_build"):
-        if latest and upstream["status"] == "outdated":
-            value = latest["version"] if latest["kind"] != "commit" else latest["ref"][:12]
-            note = "commit" if latest["kind"] == "commit" else ""
+    value = note = None
+    if latest:
+        reference = latest["version"] if latest["kind"] != "commit" else latest["ref"][:12]
+    if status in ("outdated", "awaiting_build"):
+        if latest and upstream["status"] == "outdated" and not upstream.get("stale"):
+            value, note = reference, "commit" if latest["kind"] == "commit" else None
         elif package.get("template"):
-            value = package["template"]["package_version"]
-            note = "in template"
-        else:
-            value, note = "—", ""
-        return {"value": value, "note": note, "available": True}
-    return None
+            value, note = package["template"]["package_version"], "awaiting build"
+    elif latest and upstream.get("stale"):
+        note = f"last known {reference}"
+    return {"status": status, "value": value, "note": note}
 
 
 def package_context(package):
@@ -80,12 +82,19 @@ def package_context(package):
         **package,
         "versions": list(dict.fromkeys(build["package_version"] for build in package["builds"])),
         "has_update": package["status"] in ("outdated", "awaiting_build"),
-        "upstream_update": upstream_update(package),
+        "status_summary": status_summary(package),
         "search_text": " ".join(str(package.get(key) or "") for key in ("name", "description", "source_package")),
     }
 
 
-def render_site(catalog):
+def site_root(site_url):
+    parsed = urlparse(site_url)
+    if parsed.scheme != "https" or not parsed.netloc or parsed.query or parsed.fragment:
+        raise CatalogError(f"Invalid site URL: {site_url!r}")
+    return site_url.rstrip("/") + "/"
+
+
+def render_site(catalog, site_url=REPOSITORY_URL):
     packages = document_packages(catalog)
     repositories = catalog.get("repositories")
     if not isinstance(repositories, list) or not repositories:
@@ -113,6 +122,7 @@ def render_site(catalog):
     environment.filters.update(display=display, safe_url=safe_url, time_label=time_label, size_label=size_label)
     environment.globals["statuses"] = STATUSES
     context = {
+        "canonical_url": site_root(site_url),
         "source_url": catalog.get("source_url"),
         "package_count": len(packages),
         "installation": installation,
@@ -126,15 +136,42 @@ def render_site(catalog):
     return environment.get_template("index.html").render(context)
 
 
-def build_site(catalog, output):
+def robots_txt(catalog, site_url=REPOSITORY_URL):
+    root = site_root(site_url)
+    host = urlparse(root).netloc
+    lines = ["User-agent: *"]
+    # Repository paths redirect to package downloads; keep crawlers on the package list.
+    for repository in catalog["repositories"]:
+        url = urlparse(repository["url"])
+        if url.netloc == host and url.path.strip("/"):
+            lines.append(f"Disallow: /{url.path.strip('/')}/")
+    if len(lines) == 1:
+        lines.append("Allow: /")
+    return "\n".join(lines) + f"\n\nSitemap: {root}sitemap.xml\n"
+
+
+def sitemap_xml(catalog, site_url=REPOSITORY_URL):
+    root = escape(site_root(site_url))
+    modified = escape(catalog["generated_at"])
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{root}</loc><lastmod>{modified}</lastmod></url>\n"
+        "</urlset>\n"
+    )
+
+
+def build_site(catalog, output, site_url=REPOSITORY_URL):
     output = Path(output)
     if output.resolve().is_relative_to(SITE.resolve()):
         raise CatalogError("Build output cannot overwrite the site templates")
-    html = render_site(catalog)
+    html = render_site(catalog, site_url)
     output.mkdir(parents=True, exist_ok=True)
     for name in ("styles.css", "app.js", "_headers", "hinnom.svg", "hinnom-icon.svg"):
         shutil.copyfile(SITE / name, output / name)
     (output / "index.html").write_text(html)
+    (output / "robots.txt").write_text(robots_txt(catalog, site_url))
+    (output / "sitemap.xml").write_text(sitemap_xml(catalog, site_url))
     write_json(catalog, output / "packages.json")
     return len(catalog["packages"])
 
@@ -143,9 +180,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Build the static package-list site from a generated catalog.")
     parser.add_argument("--catalog", type=Path, default=ROOT / "packages.json")
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
+    parser.add_argument("--site-url", default=REPOSITORY_URL, help="public URL of the site, for the canonical link, robots.txt and sitemap")
     args = parser.parse_args(argv)
     try:
-        count = build_site(load_json(args.catalog), args.output)
+        count = build_site(load_json(args.catalog), args.output, args.site_url)
         print(f"Built {count} packages into {args.output}")
         return 0
     except (CatalogError, OSError, KeyError, TypeError, ValueError, TemplateError) as exc:

@@ -99,6 +99,13 @@ class SiteTests(unittest.TestCase):
                 self.assertEqual(document.packages()[0]["data-update"], "true")
                 self.assertIn(expected, " ".join(document.content))
 
+    def test_current_packages_have_a_quiet_status_cell(self):
+        html = site.render_site(fixture())
+        start = html.index("<summary>", html.index('class="package"'))
+        row = html[start:html.index("</summary>", start)]
+        self.assertIn('<span class="status-cell quiet"><span class="sr-only">Current</span></span>', row)
+        self.assertNotIn("status-current", row)
+
     def test_stale_result_is_labelled_as_last_known(self):
         catalog = fixture()
         package = catalog["packages"][0]
@@ -169,6 +176,25 @@ class SiteTests(unittest.TestCase):
         document = Document(site.render_site(catalog))
         self.assertNotIn("hidden", document.named("empty-state")[0][1])
 
+    def test_page_links_to_its_canonical_url(self):
+        document = Document(site.render_site(fixture(), "https://example.org/sub"))
+        links = [attributes for tag, attributes in document.elements if tag == "link" and attributes.get("rel") == "canonical"]
+        self.assertEqual(links, [{"rel": "canonical", "href": "https://example.org/sub/"}])
+        with self.assertRaises(CatalogError):
+            site.render_site(fixture(), "http://example.org")
+
+    def test_robots_blocks_repository_paths_and_names_the_sitemap(self):
+        catalog = fixture()
+        catalog["repositories"].append({"architecture": "aarch64", "url": "https://mirror.example.org/aarch64"})
+        self.assertEqual(
+            site.robots_txt(catalog, "https://hinnom.znx.pw"),
+            "User-agent: *\nDisallow: /x86_64/\n\nSitemap: https://hinnom.znx.pw/sitemap.xml\n",
+        )
+
+    def test_sitemap_lists_the_page_with_the_catalog_time(self):
+        sitemap = site.sitemap_xml(fixture(), "https://hinnom.znx.pw")
+        self.assertIn("<loc>https://hinnom.znx.pw/</loc><lastmod>2026-11-07T00:00:00Z</lastmod>", sitemap)
+
     def test_build_output_contains_the_catalog_and_only_local_page_assets(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -177,10 +203,12 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(json.loads((root / "packages.json").read_text()), catalog)
             document = Document((root / "index.html").read_text())
             assets = [attributes["src"] for tag, attributes in document.elements if tag in ("script", "img")]
-            assets += [attributes["href"] for tag, attributes in document.elements if tag == "link"]
+            assets += [attributes["href"] for tag, attributes in document.elements if tag == "link" and attributes.get("rel") != "canonical"]
             for asset in assets:
                 self.assertTrue((root / asset).is_file(), asset)
             self.assertTrue((root / "_headers").is_file())
+            self.assertTrue((root / "robots.txt").is_file())
+            self.assertTrue((root / "sitemap.xml").is_file())
             self.assertFalse((root / "templates").exists())
             self.assertFalse((root / "requirements.txt").exists())
 

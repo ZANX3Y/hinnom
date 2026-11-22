@@ -22,6 +22,11 @@ Templates, assets, and Wrangler configuration live in `scripts/site/`; rendering
 is handled by `scripts/package_site.py`. Use `scripts/build-site --help` for
 alternate catalog and output paths.
 
+The build also writes `robots.txt` and `sitemap.xml`, and the page links to its
+canonical URL. These use `https://hinnom.znx.pw/` unless `--site-url` says
+otherwise. `robots.txt` keeps crawlers out of the repository paths, which
+redirect to package downloads.
+
 ## Deployment
 
 The [Publish website workflow](../../.github/workflows/website.yml) rebuilds the
@@ -61,6 +66,9 @@ runs stop until it is replaced.
 
 Attach a
 [custom domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+The `*.workers.dev` address is disabled so the site has a single URL for search
+engines. Also enable **Always Use HTTPS** for the zone (**SSL/TLS** → **Edge
+Certificates**), so `http://` requests redirect instead of serving a second copy.
 
 The workflow caches upstream results between runs. Failed upstream checks can
 still be published as unknown; failed tests, invalid catalogs, and build errors

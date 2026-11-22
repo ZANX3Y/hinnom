@@ -14,10 +14,14 @@
   {%- endif %}
 {%- endmacro %}
 
-{% macro badge(status) -%}
+{% macro badge(status, value=none) -%}
   {% set status = status if status in statuses else "unknown" %}
   {%- set label, description = statuses[status] -%}
+  {%- if value -%}
+  <span class="status status-{{ status }}" title="{{ label }}: {{ description }}"><span class="sr-only">{{ label }}: </span><code>{{ value }}</code></span>
+  {%- else -%}
   <span class="status status-{{ status }}" title="{{ description }}">{{ label }}</span>
+  {%- endif %}
 {%- endmacro %}
 
 {% macro snapshot_badge(recipe) -%}

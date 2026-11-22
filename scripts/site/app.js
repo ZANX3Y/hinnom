@@ -47,10 +47,13 @@
       : `${visible} of ${packages.length} packages`;
     empty.hidden = visible !== 0;
     const noUpdates = updates.checked && !terms.length && !architecture?.value;
-    empty.querySelector("h2").textContent = noUpdates ? "No known updates" : "No matching packages";
-    empty.querySelector("p").textContent = noUpdates
-      ? "No packages in this catalog have a known update."
-      : "Try another search or clear the filters.";
+    // SVG elements have no `hidden` property; set the attribute instead.
+    empty.querySelector('[data-empty="search"]').toggleAttribute("hidden", noUpdates);
+    empty.querySelector('[data-empty="updates"]').toggleAttribute("hidden", !noUpdates);
+    empty.querySelector("h2").textContent = !packages.length ? "No packages"
+      : noUpdates ? "No updates available"
+      : terms.length ? `No results for “${search.value.trim()}”`
+      : "No matching packages";
     if (write) writeState();
   }
 
@@ -89,10 +92,6 @@
   search.addEventListener("input", () => filter());
   updates.addEventListener("change", () => filter());
   architecture?.addEventListener("change", () => filter());
-  document.querySelector("#clear-filters").addEventListener("click", () => {
-    clearFilters();
-    search.focus();
-  });
   document.addEventListener("keydown", (event) => {
     const target = event.target;
     const editing = target instanceof Element && (target.closest("input, textarea, select") || target.isContentEditable);

@@ -1,6 +1,6 @@
 // Starts scheduled GitHub workflows. GitHub's own schedule events are often
 // delayed by hours or skipped, so Cloudflare Cron Triggers dispatch them instead.
-// Static assets are served before this script runs.
+// Static assets are served first; the script handles only unmatched requests and crons.
 
 const REPOSITORY = "ZANX3Y/hinnom";
 
@@ -30,6 +30,14 @@ async function dispatch(workflow, token) {
 }
 
 export default {
+  // Without this handler, requests that match no static asset fail with HTTP 500.
+  fetch() {
+    return new Response("Not found\n", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff" },
+    });
+  },
+
   async scheduled(controller, env) {
     const workflows = SCHEDULES[controller.cron];
     if (!workflows) throw new Error(`No workflows for cron ${controller.cron}`);

@@ -4,9 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Additional packages for Void Linux. Browse packages, check versions, and add the hinnom repository.">
+  <meta name="description" content="Unofficial Void Linux repository with signed XBPS packages, built from public templates.">
   <meta name="color-scheme" content="light dark">
-  <title>hinnom — Void Linux packages</title>
+  <title>Hinnom — Void Linux packages</title>
+  <link rel="canonical" href="{{ canonical_url }}">
   <link rel="icon" href="hinnom-icon.svg" type="image/svg+xml" sizes="any">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
@@ -15,7 +16,7 @@
   <a class="skip-link" href="#main">Skip to packages</a>
   <div class="shell">
     <header class="site-header">
-      <a class="wordmark" href="./" aria-label="hinnom home"><img src="hinnom.svg" width="166" height="30" alt="hinnom"></a>
+      <a class="wordmark" href="./" aria-label="Hinnom home"><img src="hinnom.svg" width="166" height="30" alt="Hinnom"></a>
       <nav aria-label="Repository links">
         {{ ui.link(source_url, "Source ↗") }}
         <a href="packages.json">JSON <span aria-hidden="true">↗</span></a>
@@ -54,24 +55,25 @@
       <p class="freshness-note" id="freshness-note" hidden></p>
 
       <section class="package-list" aria-label="Packages">
-        <div class="list-head" aria-hidden="true"><span>Package</span><span>Repository version</span><span>Upstream update</span><span>Built for</span><span>Status</span><span></span></div>
+        <div class="list-head" aria-hidden="true"><span>Package</span><span>Repository version</span><span>Built for</span><span>Status</span><span></span></div>
         <div id="packages">
           {% for package in packages %}
           {% include "package.html" %}
           {% endfor %}
         </div>
         <div class="empty-state" id="empty-state"{% if packages %} hidden{% endif %}>
-          <span class="empty-symbol" aria-hidden="true">∅</span>
-          <h2>No matching packages</h2>
-          <p>Try another search or clear the filters.</p>
-          <button type="button" class="text-button" id="clear-filters">Clear filters <span aria-hidden="true">↗</span></button>
+          <span class="empty-icon" aria-hidden="true">
+            <svg data-empty="search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8.5 8.5l4 4m0-4-4 4"/></svg>
+            <svg data-empty="updates" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" hidden><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-4.9"/></svg>
+          </span>
+          <h2>No packages</h2>
         </div>
       </section>
       <noscript><p class="no-script">Enable JavaScript to search and filter this list. Package details work without it.</p></noscript>
     </main>
 
     <footer class="site-footer">
-      <p>© 2026 hinnom <span aria-hidden="true">/</span> Unofficial Void Linux repository</p>
+      <p>© 2026 Hinnom <span aria-hidden="true">/</span> Unofficial Void Linux repository</p>
       <p>{{ package_count }} packages · {{ source_count }} source packages</p>
     </footer>
   </div>
