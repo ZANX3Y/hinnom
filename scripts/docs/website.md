@@ -24,11 +24,17 @@ alternate catalog and output paths.
 
 ## Deployment
 
-The [Publish website workflow](../../.github/workflows/website.yml) checks hourly
-and refreshes catalogs that are at least six hours old. GitHub may delay or skip
-scheduled events; hourly checks give a missed refresh another chance. Relevant
-pushes to `master`, successful package builds, and **Run workflow** refresh
-immediately.
+The [Publish website workflow](../../.github/workflows/website.yml) rebuilds the
+site on relevant pushes to `master`, after successful package builds, and on
+**Run workflow**.
+
+Scheduled runs come from Cloudflare instead of GitHub, whose schedule events are
+often delayed by hours or skipped. Cron Triggers on the `hinnom` Worker
+([`worker.js`](../site/worker.js)) dispatch the website workflow hourly and the
+[Void compatibility check](../../.github/workflows/compat.yml) daily at 05:00 UTC.
+Schedules are set in `triggers.crons` in `wrangler.toml` and mapped to workflows
+in `worker.js`; both lists must match. Failed dispatches appear under the
+Worker's **Cron Events** and logs in the Cloudflare dashboard.
 
 Create the `hinnom` Worker in Cloudflare first, then add these repository Actions
 secrets:
@@ -41,6 +47,17 @@ secrets:
 For a token scoped to **Specified Workers**, select `hinnom` after creating it.
 Creating Workers through the API requires product-level Workers Admin access.
 See [Workers permissions](https://developers.cloudflare.com/workers/authorization/workers/).
+
+The Worker needs a GitHub token to dispatch workflows. Create a fine-grained
+personal access token for this repository only, with **Actions: Read and write**
+permission, and store it as a Worker secret:
+
+```sh
+npx wrangler secret put GITHUB_TOKEN --config scripts/site/wrangler.toml
+```
+
+Secrets persist across deployments. Renew the token before it expires; scheduled
+runs stop until it is replaced.
 
 Attach a
 [custom domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).

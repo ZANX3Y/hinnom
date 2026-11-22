@@ -1,5 +1,10 @@
 name = "hinnom"
+main = "worker.js"
 compatibility_date = "2026-11-07"
 
 [assets]
 directory = "../../dist"
+
+# Dispatches GitHub workflows; see worker.js.
+[triggers]
+crons = ["0 * * * *", "0 5 * * *"]

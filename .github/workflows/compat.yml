@@ -8,8 +8,6 @@ on:
       - scripts/void_compat.py
       - scripts/package_catalog.py
       - .github/workflows/compat.yml
-  schedule:
-    - cron: '35 5 * * *'
   workflow_run:
     workflows: [Build repository]
     types: [completed]
