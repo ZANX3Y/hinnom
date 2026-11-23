@@ -1,0 +1,23 @@
+# Template file for 'font-monaspace'
+pkgname=font-monaspace
+version=1.400
+revision=1
+depends="font-util"
+short_desc="GitHub's superfamily of five metric-compatible monospace typefaces"
+maintainer="zanxey <z@zanxey.com>"
+license="OFL-1.1"
+homepage="https://monaspace.githubnext.com/"
+changelog="https://github.com/githubnext/monaspace/releases"
+distfiles="https://github.com/githubnext/monaspace/releases/download/v${version}/monaspace-static-v${version}.zip
+ https://raw.githubusercontent.com/githubnext/monaspace/v${version}/LICENSE>LICENSE-${version}"
+checksum="ab66d71be751495f679727332a3345597943bd4d7beebca03f5cde04bf994de7
+ 0e84e5f7dd6f05e74a00f2fb828ca43e489d954f5509ff0fa439ea18c0d35fe9"
+skip_extraction="LICENSE-${version}"
+font_dirs="/usr/share/fonts/OTF/monaspace"
+provides="font:monospace-0_1"
+
+do_install() {
+	vmkdir usr/share/fonts/OTF/monaspace
+	vcopy "*/*.otf" usr/share/fonts/OTF/monaspace
+	vlicense ${XBPS_SRCDISTDIR}/${pkgname}-${version}/LICENSE-${version} LICENSE
+}
