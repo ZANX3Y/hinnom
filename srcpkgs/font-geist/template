@@ -1,0 +1,20 @@
+# Template file for 'font-geist'
+pkgname=font-geist
+version=1.9.2
+revision=1
+depends="font-util"
+short_desc="Vercel's typeface family: Geist, Geist Mono, Geist Serif and Geist Pixel"
+maintainer="zanxey <z@zanxey.com>"
+license="OFL-1.1"
+homepage="https://vercel.com/font"
+changelog="https://github.com/vercel/geist-font/releases"
+distfiles="https://github.com/vercel/geist-font/releases/download/v${version}/geist-font-v${version}.zip"
+checksum=15f066d58dcb99fb10014a49913009fdaf41e464cfb8851a44b44e593c95d3d8
+font_dirs="/usr/share/fonts/TTF/geist"
+provides="font:sans-serif-0_1 font:serif-0_1 font:monospace-0_1"
+
+do_install() {
+	vmkdir usr/share/fonts/TTF/geist
+	vcopy "*/ttf/*.ttf" usr/share/fonts/TTF/geist
+	vlicense OFL.txt
+}
