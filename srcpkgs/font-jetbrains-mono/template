@@ -1,0 +1,21 @@
+# Template file for 'font-jetbrains-mono'
+pkgname=font-jetbrains-mono
+version=2.304
+revision=1
+create_wrksrc=yes
+depends="font-util"
+short_desc="JetBrains' monospace typeface for developers, with coding ligatures"
+maintainer="zanxey <z@zanxey.com>"
+license="OFL-1.1"
+homepage="https://www.jetbrains.com/lp/mono/"
+changelog="https://github.com/JetBrains/JetBrainsMono/blob/master/Changelog.md"
+distfiles="https://github.com/JetBrains/JetBrainsMono/releases/download/v${version}/JetBrainsMono-${version}.zip"
+checksum=6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf
+font_dirs="/usr/share/fonts/TTF/jetbrains-mono"
+provides="font:monospace-0_1"
+
+do_install() {
+	vmkdir usr/share/fonts/TTF/jetbrains-mono
+	vcopy "fonts/ttf/*.ttf" usr/share/fonts/TTF/jetbrains-mono
+	vlicense OFL.txt
+}
