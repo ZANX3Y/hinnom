@@ -1,0 +1,54 @@
+# Template file for 'ladybird'
+pkgname=ladybird
+version=2026.47.7
+revision=1
+_debrel=1~ubuntu24.04
+archs="x86_64 aarch64"
+create_wrksrc=yes
+# Scanning maps the bundled Qt's private-API symbols to Void's qt6-core, which
+# Ladybird never loads, so list the system libraries the binaries link to.
+noverifyrdeps=yes
+depends="glib libatomic libdrm libEGL libglvnd libpulseaudio libX11 libxcb
+ libxkbcommon libxkbcommon-x11 liberation-fonts-ttf vulkan-loader wayland
+ xcb-util xcb-util-cursor xcb-util-image xcb-util-keysyms xcb-util-renderutil
+ xcb-util-wm"
+short_desc="Truly independent web browser (alpha)"
+maintainer="zanxey <z@zanxey.com>"
+license="BSD-2-Clause"
+homepage="https://ladybird.org"
+changelog="https://github.com/LadybirdBrowser/ladybird/releases"
+# The Ubuntu 24.04 build bundles Qt and needs glibc 2.39; the 26.04 one needs 2.43.
+case "$XBPS_TARGET_MACHINE" in
+	x86_64)
+		_debarch=amd64
+		_checksum=67e33f0a234b672734b8965ea7dd5c63c8f0b616313b91d43522c53ad686b1d4
+		;;
+	aarch64)
+		_debarch=arm64
+		_checksum=7550a3a13f6a5455a00422017423f3a8c6e995fd6843806bb841fc5c5bd4949c
+		;;
+esac
+distfiles="https://apt.ladybird.org/pool/main/l/ladybird/ladybird_${version}-${_debrel}_${_debarch}.deb
+ https://github.com/LadybirdBrowser/ladybird/raw/${version}/LICENSE>LICENSE-${version}"
+checksum="${_checksum}
+ 275f18944ac7ba41acabbb468387c1c9e8e2f81f7d49e6442dafe37c25ffeea7"
+skip_extraction="LICENSE-${version}"
+nostrip=yes
+noshlibprovides=yes
+
+do_install() {
+	# Marks a .deb install, which makes the update check point at apt.
+	rm opt/ladybird/share/Lagom/package-format
+	vmkdir opt
+	vcopy opt/ladybird opt
+
+	vmkdir usr/bin
+	ln -s /opt/ladybird/bin/Ladybird ${DESTDIR}/usr/bin/ladybird
+
+	vinstall usr/share/applications/org.ladybird.Ladybird.desktop 644 usr/share/applications
+	vinstall usr/share/dbus-1/services/org.ladybird.Ladybird.service 644 usr/share/dbus-1/services
+	vinstall usr/share/metainfo/org.ladybird.Ladybird.metainfo.xml 644 usr/share/metainfo
+	vinstall usr/share/icons/hicolor/scalable/apps/org.ladybird.Ladybird.svg 644 \
+		usr/share/icons/hicolor/scalable/apps
+	vlicense ${XBPS_SRCDISTDIR}/${pkgname}-${version}/LICENSE-${version} LICENSE
+}
