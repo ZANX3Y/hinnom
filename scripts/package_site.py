@@ -153,11 +153,11 @@ def render_pages(catalog, site_url=REPOSITORY_URL):
     root = site_root(site_url)
     environment, context = site_context(catalog)
     index = environment.get_template("index.html")
-    pages = {"index.html": index.render(context, page=False, root="", canonical_url=root)}
+    pages = {"index.html": index.render(context, page=False, root="", site_url=root, canonical_url=root)}
     template = environment.get_template("package-page.html")
     for package in context["packages"]:
         pages[package["path"] + "index.html"] = template.render(
-            context, page=True, package=package, root="../../", canonical_url=root + package["path"],
+            context, page=True, package=package, root="../../", site_url=root, canonical_url=root + package["path"],
         )
     return pages
 
@@ -199,7 +199,7 @@ def build_site(catalog, output, site_url=REPOSITORY_URL):
         raise CatalogError("Build output cannot overwrite the site templates")
     pages = render_pages(catalog, site_url)
     output.mkdir(parents=True, exist_ok=True)
-    for name in ("styles.css", "app.js", "_headers", "hinnom.svg", "hinnom-icon.svg"):
+    for name in ("styles.css", "app.js", "_headers", "hinnom.svg", "hinnom-icon.svg", "hinnom-og.png"):
         shutil.copyfile(SITE / name, output / name)
     # Drop pages of packages that left the catalog since an earlier build.
     shutil.rmtree(output / "packages", ignore_errors=True)

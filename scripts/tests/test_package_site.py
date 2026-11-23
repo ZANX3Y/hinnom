@@ -230,6 +230,18 @@ class SiteTests(unittest.TestCase):
         self.assertIn("sudo xbps-install -S", content)
         self.assertNotIn("Package page", content)
 
+    def test_pages_have_open_graph_metadata_with_an_absolute_image(self):
+        pages = site.render_pages(fixture(), "https://hinnom.znx.pw")
+        document = Document(pages["packages/example/index.html"])
+        og = {attributes["property"]: attributes["content"] for tag, attributes in document.elements if tag == "meta" and "property" in attributes}
+        self.assertEqual(og["og:title"], "example for Void Linux — Hinnom")
+        self.assertEqual(og["og:description"], "Example package. Install example on Void Linux from the unofficial Hinnom repository.")
+        self.assertEqual(og["og:url"], "https://hinnom.znx.pw/packages/example/")
+        self.assertEqual(og["og:image"], "https://hinnom.znx.pw/hinnom-og.png")
+        index = Document(pages["index.html"])
+        image = [attributes["content"] for tag, attributes in index.elements if tag == "meta" and attributes.get("property") == "og:image"]
+        self.assertEqual(image, ["https://hinnom.znx.pw/hinnom-og.png"])
+
     def test_list_links_to_package_pages_and_pages_link_to_source_packages(self):
         catalog = fixture()
         subpackage = deepcopy(catalog["packages"][0])
