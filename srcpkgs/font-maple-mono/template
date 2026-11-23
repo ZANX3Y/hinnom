@@ -1,0 +1,21 @@
+# Template file for 'font-maple-mono'
+pkgname=font-maple-mono
+version=7.9
+revision=1
+create_wrksrc=yes
+depends="font-util"
+short_desc="Monospace typeface with round corners and ligatures, for coding"
+maintainer="zanxey <z@zanxey.com>"
+license="OFL-1.1"
+homepage="https://font.subf.dev/"
+changelog="https://github.com/subframe7536/maple-font/releases"
+distfiles="https://github.com/subframe7536/maple-font/releases/download/v${version}/MapleMono-TTF.zip"
+checksum=3a35f8f0669bef3dded9df208cc4526a6f7573210e134816e9084a8981271d75
+font_dirs="/usr/share/fonts/TTF/maple-mono"
+provides="font:monospace-0_1"
+
+do_install() {
+	vmkdir usr/share/fonts/TTF/maple-mono
+	vcopy "*.ttf" usr/share/fonts/TTF/maple-mono
+	vlicense LICENSE.txt
+}
