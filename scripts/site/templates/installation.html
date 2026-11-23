@@ -2,12 +2,7 @@
 <details class="installation" id="installation">
   <summary><span class="prompt" aria-hidden="true">$</span> Add this repository <span class="disclosure" aria-hidden="true">+</span></summary>
   <div class="install-content">
-    {% for repository in installation %}
-    <div class="install-step">
-      <p class="step-label">1. Add the repository · {{ repository.architecture }}</p>
-      {{ ui.command(repository.command, "Copy repository command for " ~ repository.architecture) }}
-    </div>
-    {% endfor %}
+    {{ ui.add_repository_step(installation, "Add the repository") }}
     <div class="install-step">
       <p class="step-label">2. Sync and accept the signing key</p>
       {{ ui.command("sudo xbps-install -S", "Copy sync command") }}

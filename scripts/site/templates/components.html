@@ -34,6 +34,26 @@
   <span class="arch">{{ architecture | display }}</span>
 {%- endmacro %}
 
+{# One step for all repositories: readers pick the line for their architecture. #}
+{% macro add_repository_step(repositories, label) -%}
+  <div class="install-step">
+    {% if repositories | length > 1 %}
+    <p class="step-label">1. {{ label }} for your architecture</p>
+    <div class="repository-options">
+      {% for repository in repositories %}
+      {{ architecture_badge(repository.architecture) }}
+      {{ command(repository.command, "Copy repository command for " ~ repository.architecture) }}
+      {% endfor %}
+    </div>
+    {% else %}
+    {% for repository in repositories %}
+    <p class="step-label">1. {{ label }} · {{ repository.architecture }}</p>
+    {{ command(repository.command, "Copy repository command for " ~ repository.architecture) }}
+    {% endfor %}
+    {% endif %}
+  </div>
+{%- endmacro %}
+
 {% macro command(value, label) -%}
   <div class="command">
     <code>{{ value }}</code>

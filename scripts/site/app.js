@@ -88,23 +88,26 @@
     target.scrollIntoView({ block: "start" });
   }
 
-  form.addEventListener("submit", (event) => event.preventDefault());
-  search.addEventListener("input", () => filter());
-  updates.addEventListener("change", () => filter());
-  architecture?.addEventListener("change", () => filter());
-  document.addEventListener("keydown", (event) => {
-    const target = event.target;
-    const editing = target instanceof Element && (target.closest("input, textarea, select") || target.isContentEditable);
-    if (event.key === "/" && !editing && !event.metaKey && !event.ctrlKey && !event.altKey) {
-      event.preventDefault();
-      search.focus();
-    } else if (event.key === "Escape" && document.activeElement === search) {
-      search.value = "";
-      filter();
-    }
-  });
-  window.addEventListener("popstate", () => { readState(); openPackage(); });
-  window.addEventListener("hashchange", openPackage);
+  // Package pages have no list; only copy buttons and times apply there.
+  if (form) {
+    form.addEventListener("submit", (event) => event.preventDefault());
+    search.addEventListener("input", () => filter());
+    updates.addEventListener("change", () => filter());
+    architecture?.addEventListener("change", () => filter());
+    document.addEventListener("keydown", (event) => {
+      const target = event.target;
+      const editing = target instanceof Element && (target.closest("input, textarea, select") || target.isContentEditable);
+      if (event.key === "/" && !editing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault();
+        search.focus();
+      } else if (event.key === "Escape" && document.activeElement === search) {
+        search.value = "";
+        filter();
+      }
+    });
+    window.addEventListener("popstate", () => { readState(); openPackage(); });
+    window.addEventListener("hashchange", openPackage);
+  }
 
   async function copy(text) {
     if (navigator.clipboard?.writeText) {
@@ -154,14 +157,17 @@
     const checked = document.querySelector(".checked time");
     const stale = checked && now - Date.parse(checked.dateTime) > 12 * 60 * 60 * 1000;
     const note = document.querySelector("#freshness-note");
+    if (!note) return;
     note.hidden = !stale;
     note.textContent = stale ? "Update data is over 12 hours old. Package statuses reflect the last check." : "";
   }
 
-  readState();
-  form.hidden = false;
+  if (form) {
+    readState();
+    form.hidden = false;
+    openPackage();
+  }
   for (const button of document.querySelectorAll("button[data-copy]")) button.hidden = false;
-  openPackage();
   refreshTimes();
   window.setInterval(refreshTimes, 60000);
 })();

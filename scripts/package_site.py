@@ -74,12 +74,25 @@ def status_summary(package):
     return {"status": status, "value": value, "note": note}
 
 
-def package_context(package):
-    name = package["name"]
-    if not re.fullmatch(r"[A-Za-z0-9+._-]+", name):
+def package_path(name):
+    """Return the site-relative directory of a package page."""
+    # A leading dot would allow "." or ".." to escape the packages directory.
+    if not re.fullmatch(r"[A-Za-z0-9+_-][A-Za-z0-9+._-]*", name):
         raise CatalogError(f"Invalid package name: {name!r}")
+    return f"packages/{name}/"
+
+
+def page_description(package):
+    summary = (package.get("description") or "").strip().rstrip(".")
+    install = f"Install {package['name']} on Void Linux from the unofficial Hinnom repository."
+    return f"{summary}. {install}" if summary else install
+
+
+def package_context(package):
     return {
         **package,
+        "path": package_path(package["name"]),
+        "page_description": page_description(package),
         "versions": list(dict.fromkeys(build["package_version"] for build in package["builds"])),
         "has_update": package["status"] in ("outdated", "awaiting_build"),
         "status_summary": status_summary(package),
@@ -94,7 +107,7 @@ def site_root(site_url):
     return site_url.rstrip("/") + "/"
 
 
-def render_site(catalog, site_url=REPOSITORY_URL):
+def site_context(catalog):
     packages = document_packages(catalog)
     repositories = catalog.get("repositories")
     if not isinstance(repositories, list) or not repositories:
@@ -106,8 +119,8 @@ def render_site(catalog, site_url=REPOSITORY_URL):
             raise CatalogError("Invalid repository URL or architecture")
         if not re.fullmatch(r"https?://[A-Za-z0-9._~:/%+-]+", repository["url"]):
             raise CatalogError("Repository URL cannot be used in an install command")
-        filename = "00-hinnom.conf" if len(repositories) == 1 else f"00-hinnom-{repository['architecture']}.conf"
-        value = f"echo 'repository={repository['url']}' | sudo tee /etc/xbps.d/{filename}"
+        # A system uses only its own architecture's repository, so one file name fits all.
+        value = f"echo 'repository={repository['url']}' | sudo tee /etc/xbps.d/00-hinnom.conf"
         installation.append({"architecture": repository["architecture"], "command": value})
     checks = [package["upstream"]["checked_at"] for package in packages if package.get("upstream") and package["upstream"].get("checked_at")]
     checked = min(checks) if checks else catalog["generated_at"]
@@ -122,7 +135,6 @@ def render_site(catalog, site_url=REPOSITORY_URL):
     environment.filters.update(display=display, safe_url=safe_url, time_label=time_label, size_label=size_label)
     environment.globals["statuses"] = STATUSES
     context = {
-        "canonical_url": site_root(site_url),
         "source_url": catalog.get("source_url"),
         "package_count": len(packages),
         "installation": installation,
@@ -133,7 +145,25 @@ def render_site(catalog, site_url=REPOSITORY_URL):
         "known_names": {package["name"] for package in packages},
         "source_count": len({package["source_package"] for package in packages if package.get("source_package")}),
     }
-    return environment.get_template("index.html").render(context)
+    return environment, context
+
+
+def render_pages(catalog, site_url=REPOSITORY_URL):
+    """Return every HTML page of the site, keyed by its output path."""
+    root = site_root(site_url)
+    environment, context = site_context(catalog)
+    index = environment.get_template("index.html")
+    pages = {"index.html": index.render(context, page=False, root="", canonical_url=root)}
+    template = environment.get_template("package-page.html")
+    for package in context["packages"]:
+        pages[package["path"] + "index.html"] = template.render(
+            context, page=True, package=package, root="../../", canonical_url=root + package["path"],
+        )
+    return pages
+
+
+def render_site(catalog, site_url=REPOSITORY_URL):
+    return render_pages(catalog, site_url)["index.html"]
 
 
 def robots_txt(catalog, site_url=REPOSITORY_URL):
@@ -151,12 +181,14 @@ def robots_txt(catalog, site_url=REPOSITORY_URL):
 
 
 def sitemap_xml(catalog, site_url=REPOSITORY_URL):
-    root = escape(site_root(site_url))
+    root = site_root(site_url)
     modified = escape(catalog["generated_at"])
+    urls = [root] + [root + package_path(package["name"]) for package in document_packages(catalog)]
+    entries = "".join(f"  <url><loc>{escape(url)}</loc><lastmod>{modified}</lastmod></url>\n" for url in urls)
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f"  <url><loc>{root}</loc><lastmod>{modified}</lastmod></url>\n"
+        f"{entries}"
         "</urlset>\n"
     )
 
@@ -165,11 +197,15 @@ def build_site(catalog, output, site_url=REPOSITORY_URL):
     output = Path(output)
     if output.resolve().is_relative_to(SITE.resolve()):
         raise CatalogError("Build output cannot overwrite the site templates")
-    html = render_site(catalog, site_url)
+    pages = render_pages(catalog, site_url)
     output.mkdir(parents=True, exist_ok=True)
     for name in ("styles.css", "app.js", "_headers", "hinnom.svg", "hinnom-icon.svg"):
         shutil.copyfile(SITE / name, output / name)
-    (output / "index.html").write_text(html)
+    # Drop pages of packages that left the catalog since an earlier build.
+    shutil.rmtree(output / "packages", ignore_errors=True)
+    for path, html in pages.items():
+        (output / path).parent.mkdir(parents=True, exist_ok=True)
+        (output / path).write_text(html)
     (output / "robots.txt").write_text(robots_txt(catalog, site_url))
     (output / "sitemap.xml").write_text(sitemap_xml(catalog, site_url))
     write_json(catalog, output / "packages.json")

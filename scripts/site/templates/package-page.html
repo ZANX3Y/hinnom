@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% import "components.html" as ui %}
+{% block description %}{{ package.page_description }}{% endblock %}
+{% block title %}{{ package.name }} for Void Linux — Hinnom{% endblock %}
+{% block skip_label %}Skip to package{% endblock %}
+{% block main %}
+{% set recipe = package.get("template") or {} %}
+{% set summary = package.status_summary %}
+      <article class="package-page">
+        <a class="back-link" href="{{ root }}"><span aria-hidden="true">←</span> All packages</a>
+
+        <header class="package-page-header">
+          <h1>{{ package.name }}</h1>
+          {% if package.get("description") %}
+          <p class="package-lead">{{ package.description }}</p>
+          {% endif %}
+          <div class="package-facts">
+            {% if package.versions | length > 1 %}
+            {# Versions differ between architectures, so name each one. #}
+            {% for build in package.builds %}
+            <span class="fact-version"><code>{{ build.package_version | display }}</code> {{ ui.architecture_badge(build.repository_architecture) }}</span>
+            {% endfor %}
+            {{ ui.snapshot_badge(recipe) }}
+            {% elif package.versions %}
+            <code>{{ package.versions[0] | display }}</code>
+            {{ ui.snapshot_badge(recipe) }}
+            {% for architecture in package.available_architectures %}
+            {{ ui.architecture_badge(architecture) }}
+            {% endfor %}
+            {% else %}
+            <span class="muted">Not built</span>
+            {% endif %}
+            {% if summary %}
+            {{ ui.badge(summary.status, summary.value) }}
+            {% if summary.note %}
+            <span class="cell-note">{{ summary.note }}</span>
+            {% endif %}
+            {% endif %}
+          </div>
+        </header>
+
+        {% if package.builds %}
+        <section class="page-section" aria-labelledby="install-heading">
+          <h2 id="install-heading">Install</h2>
+          {# Only the repositories that carry this package. #}
+          {% set repositories = installation | selectattr("architecture", "in", package.available_architectures) | list %}
+          {{ ui.add_repository_step(repositories, "Add the Hinnom repository") }}
+          <div class="install-step">
+            <p class="step-label">2. Sync and accept the signing key</p>
+            {{ ui.command("sudo xbps-install -S", "Copy sync command") }}
+          </div>
+          <div class="install-step">
+            <p class="step-label">3. Install {{ package.name }}</p>
+            {{ ui.command("sudo xbps-install " ~ package.name, "Copy install command for " ~ package.name) }}
+          </div>
+        </section>
+        {% endif %}
+
+        <section class="page-section" aria-labelledby="details-heading">
+          <h2 id="details-heading">Details</h2>
+          {% include "package-detail.html" %}
+        </section>
+      </article>
+{% endblock %}

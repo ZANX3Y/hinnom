@@ -1,0 +1,37 @@
+{% import "components.html" as ui %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block description %}{% endblock %}">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="canonical" href="{{ canonical_url }}">
+  <link rel="icon" href="{{ root }}hinnom-icon.svg" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="{{ root }}styles.css">
+  <script src="{{ root }}app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">{% block skip_label %}Skip to content{% endblock %}</a>
+  <div class="shell">
+    <header class="site-header">
+      <a class="wordmark" href="{{ root or './' }}" aria-label="Hinnom home"><img src="{{ root }}hinnom.svg" width="166" height="30" alt="Hinnom"></a>
+      <nav aria-label="Repository links">
+        {{ ui.link(source_url, "Source ↗") }}
+        <a href="{{ root }}packages.json">JSON <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main id="main">
+{% block main %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 Hinnom <span aria-hidden="true">/</span> Unofficial Void Linux repository</p>
+      <p>{{ package_count }} packages · {{ source_count }} source packages</p>
+    </footer>
+  </div>
+  <p class="sr-only" id="copy-status" role="status" aria-live="polite"></p>
+</body>
+</html>

@@ -22,10 +22,14 @@ Templates, assets, and Wrangler configuration live in `scripts/site/`; rendering
 is handled by `scripts/package_site.py`. Use `scripts/build-site --help` for
 alternate catalog and output paths.
 
-The build also writes `robots.txt` and `sitemap.xml`, and the page links to its
-canonical URL. These use `https://hinnom.znx.pw/` unless `--site-url` says
-otherwise. `robots.txt` keeps crawlers out of the repository paths, which
-redirect to package downloads.
+Each package also gets a page at `packages/<name>/` with its own title,
+description, and install steps, so search engines can index packages
+individually. The build removes pages of packages that left the catalog.
+
+The build also writes `robots.txt` and `sitemap.xml`, which lists the package
+pages, and every page links to its canonical URL. These use
+`https://hinnom.znx.pw/` unless `--site-url` says otherwise. `robots.txt` keeps
+crawlers out of the repository paths, which redirect to package downloads.
 
 ## Deployment
 

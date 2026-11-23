@@ -1,29 +1,9 @@
+{% extends "layout.html" %}
 {% import "components.html" as ui %}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Unofficial Void Linux repository with signed XBPS packages, built from public templates.">
-  <meta name="color-scheme" content="light dark">
-  <title>Hinnom — Void Linux packages</title>
-  <link rel="canonical" href="{{ canonical_url }}">
-  <link rel="icon" href="hinnom-icon.svg" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
-</head>
-<body>
-  <a class="skip-link" href="#main">Skip to packages</a>
-  <div class="shell">
-    <header class="site-header">
-      <a class="wordmark" href="./" aria-label="Hinnom home"><img src="hinnom.svg" width="166" height="30" alt="Hinnom"></a>
-      <nav aria-label="Repository links">
-        {{ ui.link(source_url, "Source ↗") }}
-        <a href="packages.json">JSON <span aria-hidden="true">↗</span></a>
-      </nav>
-    </header>
-
-    <main id="main">
+{% block description %}Unofficial Void Linux repository with signed XBPS packages, built from public templates.{% endblock %}
+{% block title %}Hinnom — Void Linux packages{% endblock %}
+{% block skip_label %}Skip to packages{% endblock %}
+{% block main %}
       <h1 class="sr-only">Packages</h1>
 
       {% include "installation.html" %}
@@ -54,7 +34,7 @@
       </div>
       <p class="freshness-note" id="freshness-note" hidden></p>
 
-      <section class="package-list" aria-label="Packages">
+      <section class="package-list{% if architectures | length > 1 %} multi-arch{% endif %}" aria-label="Packages">
         <div class="list-head" aria-hidden="true"><span>Package</span><span>Repository version</span><span>Built for</span><span>Status</span><span></span></div>
         <div id="packages">
           {% for package in packages %}
@@ -70,13 +50,4 @@
         </div>
       </section>
       <noscript><p class="no-script">Enable JavaScript to search and filter this list. Package details work without it.</p></noscript>
-    </main>
-
-    <footer class="site-footer">
-      <p>© 2026 Hinnom <span aria-hidden="true">/</span> Unofficial Void Linux repository</p>
-      <p>{{ package_count }} packages · {{ source_count }} source packages</p>
-    </footer>
-  </div>
-  <p class="sr-only" id="copy-status" role="status" aria-live="polite"></p>
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% import "components.html" as ui %}
+{# Shared by list rows and package pages (`page`); only the links differ. #}
+{% set upstream = package.get("upstream") or {} %}
+{% set latest = upstream.get("latest") or {} %}
+{% set recipe = package.get("template") or {} %}
+{% set source = package.get("source_package") %}
+<div class="package-detail-grid">
+  <dl class="metadata">
+    <div><dt>License</dt><dd>{{ package.get("license") | display }}</dd></div>
+    <div>
+      <dt>Source package</dt>
+      <dd>
+        {% if source in known_names and source != package.name %}
+        {# Known names are validated package names, so the link needs no URL filter. #}
+        <a href="{{ root ~ 'packages/' ~ source ~ '/' if page else '#pkg-' ~ source }}">{{ source }}</a>
+        {% else %}
+        {{ source | display }}
+        {% endif %}
+      </dd>
+    </div>
+    <div><dt>Template</dt><dd><code>{{ recipe.get("package_version") | display }}</code></dd></div>
+    <div><dt>Upstream checked</dt><dd>{{ ui.time(upstream.get("checked_at")) }}</dd></div>
+    {% if recipe.get("commit") %}
+    <div><dt>Pinned commit</dt><dd><code title="{{ recipe.commit }}">{{ recipe.commit[:12] }}</code></dd></div>
+    {% endif %}
+  </dl>
+  <div class="package-actions">
+    {# Package pages show the install steps in their own section. #}
+    {% if package.builds and not page %}
+    <p class="step-label">Install package</p>
+    {{ ui.command("sudo xbps-install " ~ package.name, "Copy install command for " ~ package.name) }}
+    {% elif not package.builds %}
+    <p class="step-label">No build has been published yet.</p>
+    {% endif %}
+    <div class="package-links">
+      {{ ui.link(package.get("homepage"), "Homepage ↗") }}
+      {{ ui.link(package.get("template_url"), "Template ↗") }}
+      {{ ui.link(latest.get("url"), "Upstream ↗") }}
+      {% if not page %}
+      <a href="{{ package.path }}">Package page</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% if upstream.get("status") == "unknown" %}
+<p class="check-note">Upstream check failed. {% if upstream.get("last_success_at") %}Last successful check: {{ ui.time(upstream.last_success_at) }}.{% else %}No previous result is available.{% endif %}</p>
+{% elif package.status == "unknown" %}
+<p class="check-note">The upstream state of this published build could not be determined.</p>
+{% endif %}
+{% if package.builds %}
+<div class="build-list">
+  {% for build in package.builds %}
+  {% include "build.html" %}
+  {% endfor %}
+</div>
+{% endif %}
