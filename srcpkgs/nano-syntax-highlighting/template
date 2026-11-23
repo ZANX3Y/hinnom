@@ -1,0 +1,19 @@
+# Template file for 'nano-syntax-highlighting'
+pkgname=nano-syntax-highlighting
+version=2026.11.01
+revision=1
+depends="nano"
+short_desc="Improved nano syntax highlighting files"
+maintainer="zanxey <z@zanxey.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/galenguyer/nano-syntax-highlighting"
+changelog="https://github.com/galenguyer/nano-syntax-highlighting/releases"
+distfiles="https://github.com/galenguyer/nano-syntax-highlighting/archive/refs/tags/${version}.tar.gz"
+checksum=8b12b151e3f7550835b539c1bff33c30484a311df85adb6173fed1c43099da1c
+
+do_install() {
+	vmkdir usr/share/nano-syntax-highlighting
+	vcopy "*.nanorc" usr/share/nano-syntax-highlighting
+	vdoc readme.md
+	vlicense license
+}
