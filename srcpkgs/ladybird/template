@@ -1,6 +1,6 @@
 # Template file for 'ladybird'
 pkgname=ladybird
-version=2026.47.7
+version=2026.47.8
 revision=1
 _debrel=1~ubuntu24.04
 archs="x86_64 aarch64"
@@ -21,11 +21,11 @@ changelog="https://github.com/LadybirdBrowser/ladybird/releases"
 case "$XBPS_TARGET_MACHINE" in
 	x86_64)
 		_debarch=amd64
-		_checksum=67e33f0a234b672734b8965ea7dd5c63c8f0b616313b91d43522c53ad686b1d4
+		_checksum=f45bd4f822f45ebf1ca8a8c044d42a9da99fa80fabab09b845df73ea8d1d6726
 		;;
 	aarch64)
 		_debarch=arm64
-		_checksum=7550a3a13f6a5455a00422017423f3a8c6e995fd6843806bb841fc5c5bd4949c
+		_checksum=5725720a6326f211e94ade2a2ffe7e6f6f4248f983d16d9f4b19fea73d65a83a
 		;;
 esac
 distfiles="https://apt.ladybird.org/pool/main/l/ladybird/ladybird_${version}-${_debrel}_${_debarch}.deb
