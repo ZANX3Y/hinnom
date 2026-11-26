@@ -1,6 +1,6 @@
 # Template file for 'desktop-plus'
 pkgname=desktop-plus
-version=3.6.12.0
+version=3.7.1.0
 revision=1
 archs="x86_64 aarch64"
 create_wrksrc=yes
@@ -14,11 +14,11 @@ changelog="https://github.com/desktop-plus/desktop-plus/releases"
 case "$XBPS_TARGET_MACHINE" in
 	x86_64)
 		_debarch=x86_64
-		checksum=91ac51e9f338ea4a6d8aa41ddbf547d7437eabc8bb8750955a9a10b8f8a23d87
+		checksum=26b990f0a6fe27f88940db043a9839aa622b925785c1dc2e81da49b1e69e486f
 		;;
 	aarch64)
 		_debarch=arm64
-		checksum=eb5295f85984b8e3db4a6f93bba59e15175228f973cdea437237ae5ea0b11b74
+		checksum=8b251f0ba6cf1c9d03e7cca25837d0c59d1e61f70247affa2957ef72447be721
 		;;
 esac
 distfiles="https://github.com/desktop-plus/desktop-plus/releases/download/v${version}/DesktopPlus-v${version}-linux-${_debarch}.deb"
