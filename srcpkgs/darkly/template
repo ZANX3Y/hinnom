@@ -1,6 +1,6 @@
 # Template file for 'darkly'
 pkgname=darkly
-version=0.5.47
+version=0.5.48
 revision=1
 build_style=cmake
 configure_args="-DBUILD_TESTING=OFF -DKDE_INSTALL_USE_QT_SYS_PATHS=ON"
@@ -21,7 +21,7 @@ license="GPL-2.0-or-later"
 homepage="https://github.com/Bali10050/Darkly"
 changelog="https://github.com/Bali10050/Darkly/releases"
 distfiles="https://github.com/Bali10050/Darkly/archive/refs/tags/v${version}.tar.gz"
-checksum=8e64ab32cf53442fd7fe1453b011a5cfbf48ca9e6174abafacda3aad6c090fe6
+checksum=5b0a7c29f0b44a808865eadd7aef280094045af7b4d287bc9b19edb58c989e9e
 
 post_install() {
 	rm -r ${DESTDIR}/usr/lib/cmake
